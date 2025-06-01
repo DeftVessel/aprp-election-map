@@ -31,23 +31,43 @@
   };
 
   async function fetchElectionData() {
-    try {
-      const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRPVFaOaZ-6eR0zlTAoybirKz9y-QwDKdWehAlNvHtH1AmcxTf3-UYUzaoSHUoY3tIEUlNTIFjqr_Mb/pub?output=csv&t=' + Date.now());
-      const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
+  try {
+    const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRPVFaOaZ-6eR0zlTAoybirKz9y-QwDKdWehAlNvHtH1AmcxTf3-UYUzaoSHUoY3tIEUlNTIFjqr_Mb/pub?output=csv&t=' + Date.now());
+    const text = await res.text();
+    const rows = text.trim().split('\n').map(r => r.split(','));
 
-      const headers = rows[0].map(h => h.trim().toUpperCase().replace(/\s/g, '_'));
-      const data = rows.slice(1).map(row => Object.fromEntries(row.map((v, i) => [headers[i], v.trim()])));
-      console.log('📊 Live sheet data:', data);
+    const headers = rows[0].map(h => h.trim().toUpperCase().replace(/\s/g, '_'));
+    const data = rows.slice(1)
+      .map(row => Object.fromEntries(row.map((v, i) => [headers[i], v.trim()])))
+      .filter(row => row['ABBREVIATIONS'] && row['GOP_VOTES'] && row['DNC_VOTES'] && row['WINNER']);
 
-      const lookup = Object.fromEntries(data.map(row => {
-        return [row['ABBREVIATIONS'], {
-          votes_gop: parseInt(row['GOP_VOTES']?.replace(/,/g, '') || 0),
-          votes_dem: parseInt(row['DNC_VOTES']?.replace(/,/g, '') || 0),
-          winner: row['WINNER']?.includes('Republican') || row['WINNER']?.includes('Rockefeller') ? 'GOP'
-                : row['WINNER']?.includes('Democrat') ? 'DEM' : 'UNKNOWN'
-        }];
-      }));
+    console.log('📊 Cleaned sheet data:', data);
+
+    const lookup = Object.fromEntries(data.map(row => {
+      return [row['ABBREVIATIONS'], {
+        votes_gop: parseInt(row['GOP_VOTES'].replace(/,/g, '') || 0),
+        votes_dem: parseInt(row['DNC_VOTES'].replace(/,/g, '') || 0),
+        winner: row['WINNER'].includes('Republican') || row['WINNER'].includes('Rockefeller') ? 'GOP'
+                : row['WINNER'].includes('Democrat') ? 'DEM' : 'UNKNOWN'
+      }];
+    }));
+
+    const updated = JSON.parse(JSON.stringify(baseGeojson));
+    updated.features.forEach(f => {
+      const abbr = f.properties.abbr || stateAbbrs[f.properties.NAME];
+      if (abbr && lookup[abbr]) {
+        f.properties.abbr = abbr;
+        f.properties.votes_gop = lookup[abbr].votes_gop;
+        f.properties.votes_dem = lookup[abbr].votes_dem;
+        f.properties.winner = lookup[abbr].winner;
+      }
+    });
+
+    map.getSource('states').setData(updated);
+  } catch (err) {
+    console.error('⚠️ Error updating map:', err);
+  }
+}
 
       const updated = JSON.parse(JSON.stringify(baseGeojson));
       updated.features.forEach(f => {
