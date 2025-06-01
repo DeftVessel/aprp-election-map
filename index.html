@@ -27,7 +27,7 @@
   let baseGeojson;
 
   async function fetchElectionData() {
-    const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRPVFaOaZ-6eR0zlTAoybirKz9y-QwDKdWehAlNvHtH1AmcxTf3-UYUzaoSHUoY3tIEUlNTIFjqr_Mb/pub?output=csv');
+    const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRPVFaOaZ-6eR0zlTAoybirKz9y-QwDKdWehAlNvHtH1AmcxTf3-UYUzaoSHUoY3tIEUlNTIFjqr_Mb/pub?output=csv') + Date.now());
     const text = await res.text();
     const rows = text.trim().split('\n').map(r => r.split(','));
     const headers = rows[0];
