@@ -52,23 +52,6 @@
       }];
     }));
 
-    const updated = JSON.parse(JSON.stringify(baseGeojson));
-    updated.features.forEach(f => {
-      const abbr = f.properties.abbr || stateAbbrs[f.properties.NAME];
-      if (abbr && lookup[abbr]) {
-        f.properties.abbr = abbr;
-        f.properties.votes_gop = lookup[abbr].votes_gop;
-        f.properties.votes_dem = lookup[abbr].votes_dem;
-        f.properties.winner = lookup[abbr].winner;
-      }
-    });
-
-    map.getSource('states').setData(updated);
-  } catch (err) {
-    console.error('⚠️ Error updating map:', err);
-  }
-}
-
       const updated = JSON.parse(JSON.stringify(baseGeojson));
       updated.features.forEach(f => {
         const abbr = f.properties.abbr || stateAbbrs[f.properties.NAME];
