@@ -125,10 +125,10 @@
       source: 'states',
       paint: {
         'fill-color': [
-          'match', ['get', 'winner'],
-          'Jay Rockefeller', '#e74c3c',
-          'Dick Gephardt', '#3498db',
-          '#cccccc'
+  'case',
+  ['all', ['>', ['get', 'reporting'], 0], ['==', ['get', 'winner'], 'Jay Rockefeller']], '#e74c3c',
+  ['all', ['>', ['get', 'reporting'], 0], ['==', ['get', 'winner'], 'Dick Gephardt']], '#3498db',
+  '#cccccc'  // default gray
         ],
         'fill-opacity': 0.7
       }
