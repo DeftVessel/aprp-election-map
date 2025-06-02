@@ -7,12 +7,26 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
   <style>
-    body { margin: 0; padding: 0; }
-    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-    .mapboxgl-popup { max-width: 250px; font: 12px/1.5 sans-serif; }
+    body { margin: 0; padding: 0; font-family: sans-serif; }
+    #map { position: absolute; top: 60px; bottom: 0; width: 100%; }
+    #header {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      background: #222; color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      z-index: 1000;
+    }
+    .stat-box { margin-right: 20px; }
   </style>
 </head>
 <body>
+<div id="header">
+  <div class="stat-box" id="ev-total">Electoral Votes — Rockefeller: 0, Gephardt: 0</div>
+  <div class="stat-box" id="pv-total">Popular Vote — Rockefeller: 0 (0%), Gephardt: 0 (0%)</div>
+  <div class="stat-box" id="reporting">Reporting: 0%</div>
+</div>
 <div id="map"></div>
 <script>
   mapboxgl.accessToken = 'pk.eyJ1IjoiNW00Y2s3NyIsImEiOiJjbWI4eXFqeDkwbzY1MmpwcDFzZDIwMmVqIn0.6JGe7JWhk28z5D3TLIJQwg';
@@ -35,49 +49,70 @@
       const headers = rows[0].map(h => h.trim().toUpperCase().replace(/\s/g, '_'));
       const data = rows.slice(1)
         .map(row => Object.fromEntries(row.map((v, i) => [headers[i], v.trim()])))
-        .filter(row => row['ABBREVIATIONS'] && row['GOP_VOTES'] && row['DNC_VOTES'] && row['WINNER']);
-
-      console.log('📊 Cleaned sheet data:', data);
+        .filter(row => row['ABBREVIATIONS']);
 
       const lookup = Object.fromEntries(data.map(row => {
         return [row['ABBREVIATIONS'], {
-          votes_gop: parseInt(row['GOP_VOTES'].replace(/,/g, '') || 0),
-          votes_dem: parseInt(row['DNC_VOTES'].replace(/,/g, '') || 0),
-          winner: row['WINNER'].includes('Republican') || row['WINNER'].includes('Rockefeller') ? 'GOP'
-                  : row['WINNER'].includes('Democrat') ? 'DEM' : 'UNKNOWN'
+          electoral_votes: parseInt(row['ELECTORAL_VOTES']) || 0,
+          reporting: parseFloat(row['REPORTING'].replace('%','')) || 0,
+          gop_candidate: row['GOP_CANDIDATE'],
+          dem_candidate: row['DNC_CANDIDATE'],
+          votes_gop: parseInt(row['GOP_VOTES'].replace(/,/g, '')) || 0,
+          votes_dem: parseInt(row['DNC_VOTES'].replace(/,/g, '')) || 0,
+          winner: row['WINNER']
         }];
       }));
+
+      let ev_rockefeller = 0;
+      let ev_gephardt = 0;
+      let total_gop_votes = 0;
+      let total_dem_votes = 0;
+      let total_reporting = 0;
+      let state_count = 0;
 
       const updated = JSON.parse(JSON.stringify(baseGeojson));
       updated.features.forEach(f => {
         const abbr = f.properties.abbr;
-        if (!abbr || !lookup[abbr]) {
-          console.warn(`⚠️ No sheet data for: ${abbr} (${f.properties.NAME})`);
-        } else {
-          f.properties.votes_gop = lookup[abbr].votes_gop;
-          f.properties.votes_dem = lookup[abbr].votes_dem;
-          f.properties.winner = lookup[abbr].winner;
-        }
+        const d = lookup[abbr];
+        if (!d) return;
+
+        f.properties.votes_gop = d.votes_gop;
+        f.properties.votes_dem = d.votes_dem;
+        f.properties.gop_candidate = d.gop_candidate;
+        f.properties.dem_candidate = d.dem_candidate;
+        f.properties.winner = d.winner;
+        f.properties.electoral_votes = d.electoral_votes;
+        f.properties.reporting = d.reporting;
+
+        total_gop_votes += d.votes_gop;
+        total_dem_votes += d.votes_dem;
+        total_reporting += d.reporting;
+        state_count++;
+
+        if (d.winner.includes(d.gop_candidate)) ev_rockefeller += d.electoral_votes;
+        else if (d.winner.includes(d.dem_candidate)) ev_gephardt += d.electoral_votes;
       });
 
-      console.log('🗺️ Updated GeoJSON:', updated.features.map(f => ({
-        name: f.properties.NAME,
-        abbr: f.properties.abbr,
-        winner: f.properties.winner,
-        gop: f.properties.votes_gop,
-        dem: f.properties.votes_dem
-      })));
+      const total_votes = total_gop_votes + total_dem_votes;
+      const perc_gop = ((total_gop_votes / total_votes) * 100).toFixed(1);
+      const perc_dem = ((total_dem_votes / total_votes) * 100).toFixed(1);
+
+      document.getElementById('ev-total').textContent = `Electoral Votes — Rockefeller: ${ev_rockefeller}, Gephardt: ${ev_gephardt}`;
+      document.getElementById('pv-total').textContent = `Popular Vote — Rockefeller: ${total_gop_votes.toLocaleString()} (${perc_gop}%), Gephardt: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
+      document.getElementById('reporting').textContent = `Reporting: ${(total_reporting / state_count).toFixed(1)}%`;
 
       map.getSource('states').setData(updated);
-
     } catch (err) {
-      console.error('⚠️ Error updating map from sheet:', err);
+      console.error('⚠️ Error fetching or parsing election data:', err);
     }
   }
 
   map.on('load', async () => {
     const res = await fetch('base-states-with-results.geojson');
     baseGeojson = await res.json();
+    baseGeojson.features.forEach(f => {
+      f.properties.winner = 'UNKNOWN';
+    });
 
     map.addSource('states', {
       type: 'geojson',
@@ -90,10 +125,9 @@
       source: 'states',
       paint: {
         'fill-color': [
-          'match',
-          ['get', 'winner'],
-          'GOP', '#e74c3c',
-          'DEM', '#3498db',
+          'match', ['get', 'winner'],
+          'Jay Rockefeller', '#e74c3c',
+          'Dick Gephardt', '#3498db',
           '#cccccc'
         ],
         'fill-opacity': 0.7
@@ -111,20 +145,25 @@
     });
 
     map.on('click', 'states-fill', (e) => {
-      const props = e.features[0].properties;
+      const p = e.features[0].properties;
+      const total = p.votes_gop + p.votes_dem;
+      const perc_gop = ((p.votes_gop / total) * 100).toFixed(1);
+      const perc_dem = ((p.votes_dem / total) * 100).toFixed(1);
       new mapboxgl.Popup()
         .setLngLat(e.lngLat)
         .setHTML(`
-          <strong>${props.NAME}</strong><br/>
-          <b>GOP:</b> ${props.votes_gop?.toLocaleString() || 'N/A'}<br/>
-          <b>DEM:</b> ${props.votes_dem?.toLocaleString() || 'N/A'}<br/>
-          <b>Winner:</b> ${props.winner || 'N/A'}
+          <strong>${p.NAME}</strong><br/>
+          <b>Electoral Votes:</b> ${p.electoral_votes}<br/>
+          <b>Reporting:</b> ${p.reporting}%<br/>
+          <b>${p.gop_candidate}:</b> ${p.votes_gop.toLocaleString()} (${perc_gop}%)<br/>
+          <b>${p.dem_candidate}:</b> ${p.votes_dem.toLocaleString()} (${perc_dem}%)<br/>
+          <b>Winner:</b> ${p.winner}
         `)
         .addTo(map);
     });
 
     await fetchElectionData();
-    setInterval(fetchElectionData, 10000); // update every 10 seconds
+    setInterval(fetchElectionData, 10000);
   });
 </script>
 </body>
