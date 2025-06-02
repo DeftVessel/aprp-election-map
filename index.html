@@ -50,11 +50,10 @@
 
       const updated = JSON.parse(JSON.stringify(baseGeojson));
       updated.features.forEach(f => {
-        const abbr = f.properties.STUSPS || f.properties.abbr;
+        const abbr = f.properties.abbr;
         if (!abbr || !lookup[abbr]) {
-          console.warn(`⚠️ No data for ${abbr} (${f.properties.NAME})`);
+          console.warn(`⚠️ No sheet data for: ${abbr} (${f.properties.NAME})`);
         } else {
-          f.properties.abbr = abbr;
           f.properties.votes_gop = lookup[abbr].votes_gop;
           f.properties.votes_dem = lookup[abbr].votes_dem;
           f.properties.winner = lookup[abbr].winner;
@@ -72,7 +71,7 @@
       map.getSource('states').setData(updated);
 
     } catch (err) {
-      console.error('⚠️ Error updating map:', err);
+      console.error('⚠️ Error updating map from sheet:', err);
     }
   }
 
