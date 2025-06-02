@@ -125,11 +125,14 @@
       source: 'states',
       paint: {
         'fill-color': [
-  'case',
-  ['all', ['>', ['get', 'reporting'], 0], ['==', ['get', 'winner'], 'Jay Rockefeller']], '#e74c3c',
-  ['all', ['>', ['get', 'reporting'], 0], ['==', ['get', 'winner'], 'Dick Gephardt']], '#3498db',
-  '#cccccc'  // default gray
-        ],
+  'match',
+  ['get', 'status'],
+  'GOP Win', '#e74c3c',
+  'Lean GOP', '#f5b7b1',
+  'DEM Win', '#3498db',
+  'Lean DEM', '#a9cce3',
+  'Uncalled', '#cccccc'
+],
         'fill-opacity': 0.7
       }
     });
