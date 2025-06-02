@@ -126,7 +126,7 @@
   }
 
   map.on('load', async () => {
-    const res = await fetch('base-states-with-results.geojson');
+    const res = await fetch('https://raw.githubusercontent.com/DeftVessel/aprp-election-map/main/base-states-with-results.geojson');
     baseGeojson = await res.json();
 
     map.addSource('states', {
