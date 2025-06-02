@@ -52,15 +52,31 @@
         .filter(row => row['ABBREVIATIONS']);
 
       const lookup = Object.fromEntries(data.map(row => {
+        const gop = parseInt(row['GOP_VOTES'].replace(/,/g, '')) || 0;
+        const dem = parseInt(row['DNC_VOTES'].replace(/,/g, '')) || 0;
+        const total_votes = parseInt(row['TOTAL_VOTES'].replace(/,/g, '')) || 0;
+        const reporting = parseFloat(row['REPORTING'].replace('%','')) || 0;
+        const margin = Math.abs(gop - dem);
+        const threshold = total_votes * 0.05;
+
+        let status = 'Uncalled';
+        if (reporting > 0) {
+          if (gop > dem) {
+            status = margin >= threshold ? 'GOP Win' : 'Lean GOP';
+          } else if (dem > gop) {
+            status = margin >= threshold ? 'DEM Win' : 'Lean DEM';
+          }
+        }
+
         return [row['ABBREVIATIONS'], {
           electoral_votes: parseInt(row['ELECTORAL_VOTES']) || 0,
-          reporting: parseFloat(row['REPORTING'].replace('%','')) || 0,
+          reporting,
           gop_candidate: row['GOP_CANDIDATE'],
           dem_candidate: row['DNC_CANDIDATE'],
-          votes_gop: parseInt(row['GOP_VOTES'].replace(/,/g, '')) || 0,
-          votes_dem: parseInt(row['DNC_VOTES'].replace(/,/g, '')) || 0,
+          votes_gop: gop,
+          votes_dem: dem,
           winner: row['WINNER'],
-          status: row['STATUS'] || 'Uncalled'
+          status
         }];
       }));
 
