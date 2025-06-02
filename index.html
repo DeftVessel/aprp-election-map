@@ -54,7 +54,7 @@
       const lookup = Object.fromEntries(data.map(row => {
         return [row['ABBREVIATIONS'], {
           electoral_votes: parseInt(row['ELECTORAL_VOTES']) || 0,
-          reporting: parseFloat(row['REPORTING %'].replace('%','')) || 0,
+          reporting: parseFloat(row['REPORTING'].replace('%','')) || 0,
           gop_candidate: row['GOP_CANDIDATE'],
           dem_candidate: row['DNC_CANDIDATE'],
           votes_gop: parseInt(row['GOP_VOTES'].replace(/,/g, '')) || 0,
