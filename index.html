@@ -8,24 +8,130 @@
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
   <style>
     body { margin: 0; padding: 0; font-family: sans-serif; }
-    #map { position: absolute; top: 60px; bottom: 0; width: 100%; }
+    #map { position: absolute; top: 160px; bottom: 0; width: 100%; }
     #header {
       position: absolute;
       top: 0; left: 0; right: 0;
       background: #222; color: white;
-      padding: 10px 20px;
+      padding: 15px 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .progress-container {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .progress-bar-wrapper {
+      display: flex;
+      align-items: center;
+      position: relative;
+      width: 100%;
+      height: 20px;
+      background: #444;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      transition: width 0.5s ease-in-out;
+    }
+    .progress-bar.rockefeller { background: #e74c3c; }
+    .progress-bar.gephardt { background: #3498db; }
+    .vote-label {
+      position: absolute;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      text-shadow: 0 0 2px rgba(0,0,0,0.7);
+    }
+    .threshold-marker {
+      position: absolute;
+      left: calc(270 / 538 * 100%);
+      width: 2px;
+      height: 100%;
+      background: #fff;
+      z-index: 10;
+    }
+    .threshold-label {
+      position: relative; /* Changed from absolute to relative */
+      left: calc(270 / 538 * 100% - 20px);
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 5px; /* Added spacing below the label */
+      text-align: left; /* Align to match the marker position */
+    }
+    .candidate-labels {
       display: flex;
       justify-content: space-between;
-      z-index: 1000;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 5px;
     }
-    .stat-box { margin-right: 20px; }
+    .stat-box { margin-top: 5px; font-size: 12px; }
+    .candidate-image {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .progress-bar-container {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 15px;
+    }
+    .candidate-stats {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 800px;
+      font-size: 12px;
+    }
+    .candidate-stat-left, .candidate-stat-right {
+      text-align: center;
+      width: 150px;
+    }
+    .title {
+      font-size: 30px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 <div id="header">
-  <div class="stat-box" id="ev-total">Electoral Votes — Rockefeller: 0, Gephardt: 0</div>
-  <div class="stat-box" id="pv-total">Popular Vote — Rockefeller: 0 (0%), Gephardt: 0 (0%)</div>
-  <div class="stat-box" id="reporting">Reporting: 0%</div>
+  <div class="title">1984 Live Election Map</div>
+  <div class="progress-container">
+    <div class="candidate-labels">
+      <span>Rockefeller: <span id="rockefeller-votes">0</span></span>
+      <span>Gephardt: <span id="gephardt-votes">0</span></span>
+    </div>
+    <div class="progress-bar-container">
+      <img src="images/Jay_Rockefeller_portrait (3).jpg" alt="Rockefeller" class="candidate-image">
+      <div style="width: 100%; position: relative;">
+        <div class="threshold-label">270 to Win</div> <!-- Moved above the progress bar -->
+        <div class="progress-bar-wrapper">
+          <div class="threshold-marker"></div>
+          <div class="progress-bar rockefeller" id="rockefeller-bar" style="width: 0%"></div>
+          <div class="progress-bar gephardt" id="gephardt-bar" style="width: 0%"></div>
+          <div class="vote-label" id="rockefeller-label" style="left: 5px">0</div>
+          <div class="vote-label" id="gephardt-label" style="right: 5px">0</div>
+        </div>
+      </div>
+      <img src="images/Dick_Gephardt_portrait.jpg" alt="Gephardt" class="candidate-image">
+    </div>
+  </div>
+  <div class="candidate-stats">
+    <div class="candidate-stat-left" id="rockefeller-pv">Rockefeller: 0 (0%)</div>
+    <div class="stat-box" id="reporting">Reporting: 0%</div>
+    <div class="candidate-stat-right" id="gephardt-pv">Gephardt: 0 (0%)</div>
+  </div>
 </div>
 <div id="map"></div>
 <script>
@@ -38,48 +144,17 @@
     zoom: 3
   });
 
-  let baseGeojson;
-
-  async function fetchElectionData() {
+  map.on('load', async () => {
     try {
-      const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vRPVFaOaZ-6eR0zlTAoybirKz9y-QwDKdWehAlNvHtH1AmcxTf3-UYUzaoSHUoY3tIEUlNTIFjqr_Mb/pub?output=csv&t=' + Date.now());
-      const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
+      // Fetch GeoJSON data
+      const res = await fetch('data/base-states-with-results.geojson');
+      if (!res.ok) {
+        throw new Error(`Failed to fetch GeoJSON: ${res.statusText}`);
+      }
+      const geojsonData = await res.json();
+      console.log('GeoJSON Data Loaded:', geojsonData);
 
-      const headers = rows[0].map(h => h.trim().toUpperCase().replace(/\s/g, '_'));
-      const data = rows.slice(1)
-        .map(row => Object.fromEntries(row.map((v, i) => [headers[i], v.trim()])))
-        .filter(row => row['ABBREVIATIONS']);
-
-      const lookup = Object.fromEntries(data.map(row => {
-        const gop = parseInt(row['GOP_VOTES'].replace(/,/g, '')) || 0;
-        const dem = parseInt(row['DNC_VOTES'].replace(/,/g, '')) || 0;
-        const total_votes = parseInt(row['TOTAL_VOTES'].replace(/,/g, '')) || 0;
-        const reporting = parseFloat(row['REPORTING'].replace('%','')) || 0;
-        const margin = Math.abs(gop - dem);
-        const threshold = total_votes * 0.05;
-
-        let status = 'Uncalled';
-        if (reporting > 0) {
-          if (gop > dem) {
-            status = margin >= threshold ? 'GOP Win' : 'Lean GOP';
-          } else if (dem > gop) {
-            status = margin >= threshold ? 'DEM Win' : 'Lean DEM';
-          }
-        }
-
-        return [row['ABBREVIATIONS'], {
-          electoral_votes: parseInt(row['ELECTORAL_VOTES']) || 0,
-          reporting,
-          gop_candidate: row['GOP_CANDIDATE'],
-          dem_candidate: row['DNC_CANDIDATE'],
-          votes_gop: gop,
-          votes_dem: dem,
-          winner: row['WINNER'],
-          status
-        }];
-      }));
-
+      // Calculate election results, only counting states with 100% reporting
       let ev_rockefeller = 0;
       let ev_gephardt = 0;
       let total_gop_votes = 0;
@@ -87,102 +162,123 @@
       let total_reporting = 0;
       let state_count = 0;
 
-      const updated = JSON.parse(JSON.stringify(baseGeojson));
-      updated.features.forEach(f => {
-        const abbr = f.properties.abbr;
-        const d = lookup[abbr];
-        if (!d) return;
+      geojsonData.features.forEach(f => {
+        const props = f.properties;
+        if (props.abbr === 'PR') return; // Skip Puerto Rico as it doesn't have electoral votes
 
-        f.properties.votes_gop = d.votes_gop;
-        f.properties.votes_dem = d.votes_dem;
-        f.properties.gop_candidate = d.gop_candidate;
-        f.properties.dem_candidate = d.dem_candidate;
-        f.properties.winner = d.winner;
-        f.properties.status = d.status;
-        f.properties.electoral_votes = d.electoral_votes;
-        f.properties.reporting = d.reporting;
-
-        total_gop_votes += d.votes_gop;
-        total_dem_votes += d.votes_dem;
-        total_reporting += d.reporting;
+        total_gop_votes += props.votes_gop || 0;
+        total_dem_votes += props.votes_dem || 0;
+        total_reporting += props.reporting || 0;
         state_count++;
 
-        if (d.winner.includes(d.gop_candidate)) ev_rockefeller += d.electoral_votes;
-        else if (d.winner.includes(d.dem_candidate)) ev_gephardt += d.electoral_votes;
+        // Only count electoral votes if reporting is 100%
+        if (props.reporting === 100) {
+          if (props.winner === props.gop_candidate) {
+            ev_rockefeller += props.electoral_votes || 0;
+          } else if (props.winner === props.dem_candidate) {
+            ev_gephardt += props.electoral_votes || 0;
+          }
+        }
       });
 
       const total_votes = total_gop_votes + total_dem_votes;
-      const perc_gop = ((total_gop_votes / total_votes) * 100).toFixed(1);
-      const perc_dem = ((total_dem_votes / total_votes) * 100).toFixed(1);
+      const perc_gop = total_votes > 0 ? ((total_gop_votes / total_votes) * 100).toFixed(1) : 0;
+      const perc_dem = total_votes > 0 ? ((total_dem_votes / total_votes) * 100).toFixed(1) : 0;
+      const avg_reporting = state_count > 0 ? (total_reporting / state_count).toFixed(1) : 0;
 
-      document.getElementById('ev-total').textContent = `Electoral Votes — Rockefeller: ${ev_rockefeller}, Gephardt: ${ev_gephardt}`;
-      document.getElementById('pv-total').textContent = `Popular Vote — Rockefeller: ${total_gop_votes.toLocaleString()} (${perc_gop}%), Gephardt: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
-      document.getElementById('reporting').textContent = `Reporting: ${(total_reporting / state_count).toFixed(1)}%`;
+      // Update UI with election results
+      document.getElementById('rockefeller-votes').textContent = ev_rockefeller;
+      document.getElementById('gephardt-votes').textContent = ev_gephardt;
+      document.getElementById('rockefeller-bar').style.width = `${(ev_rockefeller / 538) * 100}%`;
+      document.getElementById('gephardt-bar').style.width = `${(ev_gephardt / 538) * 100}%`;
+      document.getElementById('rockefeller-label').textContent = ev_rockefeller;
+      document.getElementById('gephardt-label').textContent = ev_gephardt;
+      document.getElementById('rockefeller-pv').textContent = `Rockefeller: ${total_gop_votes.toLocaleString()} (${perc_gop}%)`;
+      document.getElementById('gephardt-pv').textContent = `Gephardt: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
+      document.getElementById('reporting').textContent = `Reporting: ${avg_reporting}%`;
 
-      map.getSource('states').setData(updated);
-    } catch (err) {
-      console.error('⚠️ Error fetching or parsing election data:', err);
+      // Add GeoJSON source
+      map.addSource('states', {
+        type: 'geojson',
+        data: geojsonData
+      });
+      console.log('GeoJSON Source Added');
+
+      // Add fill layer
+      map.addLayer({
+        id: 'states-fill',
+        type: 'fill',
+        source: 'states',
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'status'],
+            'GOP Win', '#d12c0f',
+            'Lean GOP', '#de6954',
+            'DEM Win', '#0e47e6',
+            'Lean DEM', '#6c89d9',
+            'Uncalled', '#cccccc',
+            '#ffffff' // Fallback color if status doesn't match
+          ],
+          'fill-opacity': 0.7
+        }
+      });
+      console.log('Fill Layer Added');
+
+      // Add outline layer
+      map.addLayer({
+        id: 'states-outline',
+        type: 'line',
+        source: 'states',
+        paint: {
+          'line-color': '#333',
+          'line-width': 1
+        }
+      });
+      console.log('Outline Layer Added');
+
+      // Add click event for popups
+      map.on('click', 'states-fill', (e) => {
+        const p = e.features[0].properties;
+        const total = (p.votes_gop || 0) + (p.votes_dem || 0);
+        const perc_gop = total > 0 ? ((p.votes_gop / total) * 100).toFixed(1) : 0;
+        const perc_dem = total > 0 ? ((p.votes_dem / total) * 100).toFixed(1) : 0;
+        const winner = p.winner === 'UNKNOWN' ? 'Uncalled' : p.winner;
+        const gopCandidate = p.gop_candidate || 'Rockefeller';
+        const demCandidate = p.dem_candidate || 'Gephardt';
+        const gopCheck = winner === gopCandidate ? '✓ ' : '';
+        const demCheck = winner === demCandidate ? '✓ ' : '';
+
+        new mapboxgl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <strong>${p.NAME}</strong><br/>
+            <b>Electoral Votes:</b> ${p.electoral_votes || 0}<br/>
+            <b>Reporting:</b> ${p.reporting || 0}%<br/>
+            <b><span style="color: #d12c0f;">${gopCheck}${gopCandidate}</span>:</b> ${p.votes_gop.toLocaleString()} (${perc_gop}%)<br/>
+            <b><span style="color: #0e47e6;">${demCheck}${demCandidate}</span>:</b> ${p.votes_dem.toLocaleString()} (${perc_dem}%)<br/>
+            <b>Winner:</b> ${winner}
+          `)
+          .addTo(map);
+      });
+
+      // Add hover effects
+      map.on('mouseenter', 'states-fill', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'states-fill', () => {
+        map.getCanvas().style.cursor = '';
+      });
+    } catch (error) {
+      console.error('Error loading map:', error);
+      document.getElementById('map').innerHTML = '<p style="color: red; text-align: center;">Failed to load map. Please check the GeoJSON file or Mapbox token.</p>';
     }
-  }
+  });
 
-  map.on('load', async () => {
-    const res = await fetch('https://raw.githubusercontent.com/DeftVessel/aprp-election-map/main/base-states-with-results.geojson');
-    baseGeojson = await res.json();
-
-    map.addSource('states', {
-      type: 'geojson',
-      data: baseGeojson
-    });
-
-    map.addLayer({
-      id: 'states-fill',
-      type: 'fill',
-      source: 'states',
-      paint: {
-        'fill-color': [
-          'match',
-          ['get', 'status'],
-          'GOP Win', '#e74c3c',
-          'Lean GOP', '#f5b7b1',
-          'DEM Win', '#3498db',
-          'Lean DEM', '#a9cce3',
-          'Uncalled', '#cccccc'
-        ],
-        'fill-opacity': 0.7
-      }
-    });
-
-    map.addLayer({
-      id: 'states-outline',
-      type: 'line',
-      source: 'states',
-      paint: {
-        'line-color': '#333',
-        'line-width': 1
-      }
-    });
-
-    map.on('click', 'states-fill', (e) => {
-      const p = e.features[0].properties;
-      const total = p.votes_gop + p.votes_dem;
-      const perc_gop = ((p.votes_gop / total) * 100).toFixed(1);
-      const perc_dem = ((p.votes_dem / total) * 100).toFixed(1);
-      new mapboxgl.Popup()
-        .setLngLat(e.lngLat)
-        .setHTML(`
-          <strong>${p.NAME}</strong><br/>
-          <b>Electoral Votes:</b> ${p.electoral_votes}<br/>
-          <b>Reporting:</b> ${p.reporting}%<br/>
-          <b>${p.gop_candidate}:</b> ${p.votes_gop.toLocaleString()} (${perc_gop}%)<br/>
-          <b>${p.dem_candidate}:</b> ${p.votes_dem.toLocaleString()} (${perc_dem}%)<br/>
-          <b>Status:</b> ${p.status}
-        `)
-        .addTo(map);
-    });
-
-    await fetchElectionData();
-    setInterval(fetchElectionData, 10000);
+  map.on('error', (e) => {
+    console.error('Mapbox Error:', e);
   });
 </script>
 </body>
 </html>
+
