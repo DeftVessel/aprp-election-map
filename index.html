@@ -253,13 +253,7 @@ data.features.forEach(f => {
           .addTo(map);
       });
 
-      map.on('mouseenter', 'states-fill', () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'states-fill', () => {
-        map.getCanvas().style.cursor = '';
-      });
-const hoverPopup = new mapboxgl.Popup({
+      const hoverPopup = new mapboxgl.Popup({
   closeButton: false,
   closeOnClick: false
 });
@@ -269,6 +263,15 @@ map.on('mousemove', 'states-fill', (e) => {
   hoverPopup.setLngLat(e.lngLat)
     .setHTML(`<strong>${p.NAME}</strong><br/>Status: ${p.status}<br/>Reporting: ${p.reporting}%`)
     .addTo(map);
+});
+
+map.on('mouseleave', 'states-fill', () => {
+  hoverPopup.remove();
+  map.getCanvas().style.cursor = '';
+});
+
+map.on('mouseenter', 'states-fill', () => {
+  map.getCanvas().style.cursor = 'pointer';
 });
 
     } catch (error) {
