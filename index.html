@@ -295,20 +295,6 @@ data.features.forEach(f => {
     .addTo(map);
 });
 
-        new mapboxgl.Popup()
-          .setLngLat(e.lngLat)
-          .setHTML(`
-            <strong>${p.NAME}</strong><br/>
-            <b>Electoral Votes:</b> ${p.electoral_votes}<br/>
-            <b>Reporting:</b> ${p.reporting}%<br/>
-            <b style="color:#d12c0f;">${gopCheck}${gopName}:</b> ${gop.toLocaleString()} (${gopPerc}%)<br/>
-            <b style="color:#0e47e6;">${demCheck}${demName}:</b> ${dem.toLocaleString()} (${demPerc}%)<br/>
-            <b style="color:#d900d9;">${indCheck}${indName} (${p.ind_party || 'Independent'}):</b> ${ind.toLocaleString()} (${indPerc}%)<br/>
-            <b>Winner:</b> ${winner}
-          `)
-          .addTo(map);
-      });
-
       const hoverPopup = new mapboxgl.Popup({
   closeButton: false,
   closeOnClick: false
