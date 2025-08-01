@@ -177,7 +177,6 @@ document.getElementById('johnson-label').textContent = ev_johnson;
 document.getElementById('underwood-label').textContent = ev_underwood;
 document.getElementById('johnson-pv').textContent = `Johnson: ${total_gop_votes.toLocaleString()} (${perc_gop}%)`;
 document.getElementById('underwood-pv').textContent = `Underwood: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
-document.getElementById('other-pv').textContent = `Other: ${total_ind_votes.toLocaleString()} (${perc_ind}%)`;
 document.getElementById('reporting').textContent = `Reporting: ${reporting_pct}%`;
 
       map.addSource('states', { type: 'geojson', data: data });
