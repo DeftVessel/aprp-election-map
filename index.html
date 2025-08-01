@@ -149,18 +149,29 @@
         type: 'fill',
         source: 'states',
         paint: {
-          'fill-color': [
-            'match',
-            ['get', 'status'],
-            'GOP Win', '#d12c0f',
-            'DEM Win', '#0e47e6',
-            'IND Win', '#d900d9',
-            'Lean GOP', '#f4a6a6',
-            'Lean DEM', '#a6c8f4',
-            'Lean IND', '#ffb2ff',
-            'Uncalled', '#cccccc',
-            '#ffffff'
-          ],
+         'fill-color': [
+  'match',
+  ['get', 'status'],
+  // GOP
+  'Solid GOP', '#990000',
+  'Likely GOP', '#cc3333',
+  'Lean GOP', '#f4a6a6',
+  'Tilt GOP', '#fadada',
+  // DEM
+  'Solid DEM', '#000099',
+  'Likely DEM', '#3366cc',
+  'Lean DEM', '#a6c8f4',
+  'Tilt DEM', '#dae9fa',
+  // IND
+  'Solid IND', '#800080',
+  'Likely IND', '#aa00aa',
+  'Lean IND', '#d58bd5',
+  'Tilt IND', '#f0c6f0',
+  // Other
+  'Uncalled', '#cccccc',
+  'Tossup', '#999999',
+  '#ffffff' // fallback
+],
           'fill-opacity': 1.0
         }
       });
