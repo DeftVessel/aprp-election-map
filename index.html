@@ -163,20 +163,70 @@ data.features.forEach(f => {
   else if (props.status.includes('IND')) ev_other += +props.electoral_votes;
 }
 });
-      const total_registered = 104335048;
-      const perc_gop = ((total_gop_votes / total_registered) * 100).toFixed(1);
-      const perc_dem = ((total_dem_votes / total_registered) * 100).toFixed(1);
-      const reporting_pct = Math.round((total_votes / total_registered) * 100);
+      const total_reported_votes = total_gop_votes + total_dem_votes + total_ind_votes;
+const perc_gop = total_reported_votes > 0 ? ((total_gop_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
+const perc_dem = total_reported_votes > 0 ? ((total_dem_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
+const perc_ind = total_reported_votes > 0 ? ((total_ind_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
 
-      document.getElementById('johnson-votes').textContent = ev_johnson;
-      document.getElementById('underwood-votes').textContent = ev_underwood;
-      document.getElementById('johnson-bar').style.width = `${(ev_johnson / 538) * 100}%`;
-      document.getElementById('underwood-bar').style.width = `${(ev_underwood / 538) * 100}%`;
-      document.getElementById('johnson-label').textContent = ev_johnson;
-      document.getElementById('underwood-label').textContent = ev_underwood;
-      document.getElementById('johnson-pv').textContent = `Johnson: ${total_gop_votes.toLocaleString()} (${perc_gop}%)`;
-      document.getElementById('underwood-pv').textContent = `Underwood: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
-      document.getElementById('reporting').textContent = `Reporting: ${reporting_pct}%`;
+document.getElementById('johnson-votes').textContent = ev_johnson;
+document.getElementById('underwood-votes').textContent = ev_underwood;
+document.getElementById('johnson-bar').style.width = `${(ev_johnson / 538) * 100}%`;
+document.getElementById('underwood-bar').style.width = `${(ev_underwood / 538) * 100}%`;
+document.getElementById('johnson-label').textContent = ev_johnson;
+document.getElementById('underwood-label').textContent = ev_underwood;
+document.getElementById('johnson-pv').textContent = `Johnson: ${total_gop_votes.toLocaleString()} (${perc_gop}%)`;
+document.getElementById('underwood-pv').textContent = `Underwood: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
+document.getElementById('other-pv').textContent = `Other: ${total_ind_votes.toLocaleString()} (${perc_ind}%)`;
+document.getElementById('reporting').textContent = `Reporting: ${reporting_pct}%`;
+
+// Calculate 5 closest states by margin
+const closestStates = data.features
+  .filter(f => {
+    const g = +f.properties.votes_gop || 0;
+    const d = +f.properties.votes_dem || 0;
+    const i = +f.properties.votes_ind || 0;
+    return g + d + i > 0;
+  })
+  .map(f => {
+    const props = f.properties;
+    const g = +props.votes_gop || 0;
+    const d = +props.votes_dem || 0;
+    const i = +props.votes_ind || 0;
+
+    const total = g + d + i;
+    const entries = [
+      { name: props.gop_candidate || 'Johnson', value: g, party: 'GOP' },
+      { name: props.dem_candidate || 'Underwood', value: d, party: 'DEM' },
+      { name: props.ind_candidate || 'Other', value: i, party: 'IND' }
+    ].sort((a, b) => b.value - a.value);
+
+    const lead = entries[0];
+    const runnerUp = entries[1];
+    return {
+      state: props.NAME,
+      leader: lead.name,
+      party: lead.party,
+      margin: lead.value - runnerUp.value
+    };
+  })
+  .sort((a, b) => a.margin - b.margin)
+  .slice(0, 5);
+
+// Render closest states to HTML
+const colorMap = {
+  'GOP': '#c00',
+  'DEM': '#00f',
+  'IND': '#800080'
+};
+
+const html = closestStates.map(s => `
+  <div style="margin-bottom: 5px;">
+    <span style="display: inline-block; width: 12px; height: 12px; background: ${colorMap[s.party]}; border-radius: 50%; margin-right: 6px;"></span>
+    <strong>${s.leader}</strong> leads in <strong>${s.state}</strong> by <strong>${s.margin.toLocaleString()}</strong> votes
+  </div>
+`).join('');
+
+document.getElementById('closest-states').innerHTML = html;
 
       map.addSource('states', { type: 'geojson', data: data });
 
@@ -342,6 +392,10 @@ map.on('mouseenter', 'states-fill', () => {
   <div><span style="background:#f0c6f0; width:12px; height:12px; display:inline-block;"></span> Tilt IND</div>
   <div><span style="background:#999999; width:12px; height:12px; display:inline-block;"></span> Tossup</div>
   <div><span style="background:#cccccc; width:12px; height:12px; display:inline-block;"></span> Uncalled</div>
+</div>
+<div id="aprp-news" style="position: absolute; bottom: 0; left: 0; right: 0; background: white; border-top: 2px solid #333; padding: 10px 20px; font-family: sans-serif; font-size: 14px; z-index: 1000; box-shadow: 0 -2px 5px rgba(0,0,0,0.1);">
+  <strong style="font-size: 16px;">APRP NEWS</strong>
+  <div id="closest-states" style="margin-top: 8px;"></div>
 </div>
 </body>
 </html>
