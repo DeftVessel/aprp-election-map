@@ -104,41 +104,59 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiNW00Y2s3NyIsImEiOiJjbWI4eXFqeDkwbzY1MmpwcDFzZ
     zoom: 3
   });
 
+ window.onload = () => {
   map.on('load', async () => {
     try {
       const res = await fetch('https://script.google.com/macros/s/AKfycbzxzzJT-mqKYsVLtanqrw4Utugnf206W2nH_chk6FozzC1gs5gdxsZxHAD-sJ9fI5mlAg/exec');
       const data = await res.json();
-function determineStatus(gop, dem, ind, reporting) {
-  const total = gop + dem + ind;
-  if (total === 0 || reporting < 100) return 'Uncalled';
 
-  const percGOP = gop / total;
-  const percDEM = dem / total;
-  const percIND = ind / total;
+      function determineStatus(gop, dem, ind, reporting) {
+        const total = gop + dem + ind;
+        if (total === 0 || reporting < 100) return 'Uncalled';
 
-  const sorted = [
-    { party: 'GOP', value: percGOP },
-    { party: 'DEM', value: percDEM },
-    { party: 'IND', value: percIND }
-  ].sort((a, b) => b.value - a.value);
+        const percGOP = gop / total;
+        const percDEM = dem / total;
+        const percIND = ind / total;
 
-  const leader = sorted[0];
-  const runnerUp = sorted[1];
-  const margin = leader.value - runnerUp.value;
+        const sorted = [
+          { party: 'GOP', value: percGOP },
+          { party: 'DEM', value: percDEM },
+          { party: 'IND', value: percIND }
+        ].sort((a, b) => b.value - a.value);
 
-  if (margin >= 0.20) return `Solid ${leader.party}`;
-  if (margin >= 0.10) return `Likely ${leader.party}`;
-  if (margin >= 0.05) return `Lean ${leader.party}`;
-  if (margin >= 0.02) return `Tilt ${leader.party}`;
-  return 'Tossup';
-}
-data.features.forEach(f => {
-  const gop = +f.properties.votes_gop || 0;
-  const dem = +f.properties.votes_dem || 0;
-  const ind = +f.properties.votes_ind || 0;
+        const leader = sorted[0];
+        const runnerUp = sorted[1];
+        const margin = leader.value - runnerUp.value;
 
-  f.properties.status = determineStatus(gop, dem, ind, +f.properties.reporting || 0);
-});
+        if (margin >= 0.20) return `Solid ${leader.party}`;
+        if (margin >= 0.10) return `Likely ${leader.party}`;
+        if (margin >= 0.05) return `Lean ${leader.party}`;
+        if (margin >= 0.02) return `Tilt ${leader.party}`;
+        return 'Tossup';
+      }
+
+      // ✅ Now loop over the data.features AFTER fetch
+      data.features.forEach(f => {
+        const gop = +f.properties.votes_gop || 0;
+        const dem = +f.properties.votes_dem || 0;
+        const ind = +f.properties.votes_ind || 0;
+        const reporting = +f.properties.reporting || 0;
+
+        f.properties.status = determineStatus(gop, dem, ind, reporting);
+      });
+
+      // ✅ Continue with map logic here...
+      // map.addSource(...) etc.
+
+    } catch (error) {
+      console.error('Map load error:', error);
+      document.getElementById('map').innerHTML = `
+        <p style="color: red; text-align: center;">
+          Failed to load map. Please check data source or internet connection.
+        </p>`;
+    }
+  });
+};
 
       let ev_johnson = 0, ev_underwood = 0, ev_other = 0, total_gop_votes = 0, total_dem_votes = 0, total_ind_votes = 0, total_votes = 0;
 
