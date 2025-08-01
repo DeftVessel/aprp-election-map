@@ -135,24 +135,22 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiNW00Y2s3NyIsImEiOiJjbWI4eXFqeDkwbzY1MmpwcDFzZ
         return 'Tossup';
       }
 
-      // Assign status to each feature
+      // Assign status
       data.features.forEach(f => {
         const gop = +f.properties.votes_gop || 0;
         const dem = +f.properties.votes_dem || 0;
         const ind = +f.properties.votes_ind || 0;
         const reporting = +f.properties.reporting || 0;
-
         f.properties.status = determineStatus(gop, dem, ind, reporting);
       });
 
-      // Tally votes and electoral votes
-      let ev_johnson = 0, ev_underwood = 0, ev_other = 0;
+      // Electoral + PV stats
+      let ev_johnson = 0, ev_underwood = 0;
       let total_gop_votes = 0, total_dem_votes = 0, total_ind_votes = 0, total_votes = 0;
 
       data.features.forEach(f => {
         const props = f.properties;
         if (props.abbr === 'PR') return;
-
         const gop = +props.votes_gop || 0;
         const dem = +props.votes_dem || 0;
         const ind = +props.votes_ind || 0;
@@ -167,18 +165,14 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiNW00Y2s3NyIsImEiOiJjbWI4eXFqeDkwbzY1MmpwcDFzZ
         if (reporting === 100) {
           if (props.status.includes('GOP')) ev_johnson += +props.electoral_votes;
           else if (props.status.includes('DEM')) ev_underwood += +props.electoral_votes;
-          else if (props.status.includes('IND')) ev_other += +props.electoral_votes;
         }
       });
 
-      // Calculate based on reported vote totals only
       const total_reported_votes = total_gop_votes + total_dem_votes + total_ind_votes;
       const perc_gop = total_reported_votes > 0 ? ((total_gop_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
       const perc_dem = total_reported_votes > 0 ? ((total_dem_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
-      const perc_ind = total_reported_votes > 0 ? ((total_ind_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
       const reporting_pct = total_votes > 0 ? ((total_reported_votes / total_votes) * 100).toFixed(1) : '0.0';
 
-      // Update DOM
       document.getElementById('johnson-votes').textContent = ev_johnson;
       document.getElementById('underwood-votes').textContent = ev_underwood;
       document.getElementById('johnson-bar').style.width = `${(ev_johnson / 538) * 100}%`;
@@ -189,10 +183,48 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiNW00Y2s3NyIsImEiOiJjbWI4eXFqeDkwbzY1MmpwcDFzZ
       document.getElementById('underwood-pv').textContent = `Underwood: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
       document.getElementById('reporting').textContent = `Reporting: ${reporting_pct}%`;
 
-      // Now you're safe to continue: map.addSource, layers, popups, etc.
-      map.addSource('states', { type: 'geojson', data: data });
+      // ✅ Moved here: Calculate closest states
+      const closestStates = data.features
+        .filter(f => {
+          const g = +f.properties.votes_gop || 0;
+          const d = +f.properties.votes_dem || 0;
+          const i = +f.properties.votes_ind || 0;
+          return g + d + i > 0;
+        })
+        .map(f => {
+          const props = f.properties;
+          const g = +props.votes_gop || 0;
+          const d = +props.votes_dem || 0;
+          const i = +props.votes_ind || 0;
+          const entries = [
+            { name: props.gop_candidate || 'Johnson', value: g, party: 'GOP' },
+            { name: props.dem_candidate || 'Underwood', value: d, party: 'DEM' },
+            { name: props.ind_candidate || 'Other', value: i, party: 'IND' }
+          ].sort((a, b) => b.value - a.value);
+          const lead = entries[0];
+          const runnerUp = entries[1];
+          return {
+            state: props.NAME,
+            leader: lead.name,
+            party: lead.party,
+            margin: lead.value - runnerUp.value
+          };
+        })
+        .sort((a, b) => a.margin - b.margin)
+        .slice(0, 5);
 
-      // (The rest of your map logic should go here...)
+      const colorMap = { GOP: '#c00', DEM: '#00f', IND: '#800080' };
+      const html = closestStates.map(s => `
+        <div style="margin-bottom: 5px;">
+          <span style="display: inline-block; width: 12px; height: 12px; background: ${colorMap[s.party]}; border-radius: 50%; margin-right: 6px;"></span>
+          <strong>${s.leader}</strong> leads in <strong>${s.state}</strong> by <strong>${s.margin.toLocaleString()}</strong> votes
+        </div>
+      `).join('');
+      document.getElementById('closest-states').innerHTML = html;
+
+      // ✅ Now safe to render map
+      map.addSource('states', { type: 'geojson', data });
+      // (rest of your map.addLayer and popup logic remains unchanged)
 
     } catch (error) {
       console.error('Map load error:', error);
@@ -203,57 +235,6 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiNW00Y2s3NyIsImEiOiJjbWI4eXFqeDkwbzY1MmpwcDFzZ
     }
   });
 };
-
-// Calculate 5 closest states by margin
-const closestStates = data.features
-  .filter(f => {
-    const g = +f.properties.votes_gop || 0;
-    const d = +f.properties.votes_dem || 0;
-    const i = +f.properties.votes_ind || 0;
-    return g + d + i > 0;
-  })
-  .map(f => {
-    const props = f.properties;
-    const g = +props.votes_gop || 0;
-    const d = +props.votes_dem || 0;
-    const i = +props.votes_ind || 0;
-
-    const total = g + d + i;
-    const entries = [
-      { name: props.gop_candidate || 'Johnson', value: g, party: 'GOP' },
-      { name: props.dem_candidate || 'Underwood', value: d, party: 'DEM' },
-      { name: props.ind_candidate || 'Other', value: i, party: 'IND' }
-    ].sort((a, b) => b.value - a.value);
-
-    const lead = entries[0];
-    const runnerUp = entries[1];
-    return {
-      state: props.NAME,
-      leader: lead.name,
-      party: lead.party,
-      margin: lead.value - runnerUp.value
-    };
-  })
-  .sort((a, b) => a.margin - b.margin)
-  .slice(0, 5);
-
-// Render closest states to HTML
-const colorMap = {
-  'GOP': '#c00',
-  'DEM': '#00f',
-  'IND': '#800080'
-};
-
-const html = closestStates.map(s => `
-  <div style="margin-bottom: 5px;">
-    <span style="display: inline-block; width: 12px; height: 12px; background: ${colorMap[s.party]}; border-radius: 50%; margin-right: 6px;"></span>
-    <strong>${s.leader}</strong> leads in <strong>${s.state}</strong> by <strong>${s.margin.toLocaleString()}</strong> votes
-  </div>
-`).join('');
-
-document.getElementById('closest-states').innerHTML = html;
-
-      map.addSource('states', { type: 'geojson', data: data });
 
       map.addLayer({
         id: 'states-fill',
