@@ -14,6 +14,9 @@
       background: #222; color: white; padding: 15px 20px;
       z-index: 1000; display: flex; flex-direction: column; align-items: center;
     }
+.hidden {
+  display: none;
+}
     .progress-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 10px; }
     .progress-bar-wrapper {
       display: flex; align-items: center; position: relative;
@@ -102,6 +105,37 @@
     try {
       const res = await fetch('https://script.google.com/macros/s/AKfycbzxzzJT-mqKYsVLtanqrw4Utugnf206W2nH_chk6FozzC1gs5gdxsZxHAD-sJ9fI5mlAg/exec');
       const data = await res.json();
+function determineStatus(gop, dem, ind) {
+  const total = gop + dem + ind;
+  if (total === 0) return 'Uncalled';
+
+  const percGOP = gop / total;
+  const percDEM = dem / total;
+  const percIND = ind / total;
+
+  const sorted = [
+    { party: 'GOP', value: percGOP },
+    { party: 'DEM', value: percDEM },
+    { party: 'IND', value: percIND }
+  ].sort((a, b) => b.value - a.value);
+
+  const leader = sorted[0];
+  const runnerUp = sorted[1];
+  const margin = leader.value - runnerUp.value;
+
+  if (margin >= 0.20) return `Solid ${leader.party}`;
+  if (margin >= 0.10) return `Likely ${leader.party}`;
+  if (margin >= 0.05) return `Lean ${leader.party}`;
+  if (margin >= 0.02) return `Tilt ${leader.party}`;
+  return 'Tossup';
+}
+data.features.forEach(f => {
+  const gop = +f.properties.votes_gop || 0;
+  const dem = +f.properties.votes_dem || 0;
+  const ind = +f.properties.votes_ind || 0;
+
+  f.properties.status = determineStatus(gop, dem, ind);
+});
 
       let ev_johnson = 0, ev_underwood = 0, ev_other = 0, total_gop_votes = 0, total_dem_votes = 0, total_ind_votes = 0, total_votes = 0;
 
@@ -121,11 +155,10 @@
         total_votes += total;
 
         if (reporting === 100) {
-          if (props.status === 'GOP Win') ev_johnson += +props.electoral_votes;
-          else if (props.status === 'DEM Win') ev_underwood += +props.electoral_votes;
-          else if (props.status === 'IND Win') ev_other += +props.electoral_votes;
-        }
-      });
+  if (props.status.includes('GOP')) ev_johnson += +props.electoral_votes;
+  else if (props.status.includes('DEM')) ev_underwood += +props.electoral_votes;
+  else if (props.status.includes('IND')) ev_other += +props.electoral_votes;
+}
 
       const total_registered = 104335048;
       const perc_gop = ((total_gop_votes / total_registered) * 100).toFixed(1);
@@ -233,5 +266,26 @@
     }
   });
 </script>
+<button onclick="document.getElementById('legend').classList.toggle('hidden')" 
+        style="position: absolute; top: 105px; left: 20px; z-index: 1001;">
+  Toggle Legend
+</button>
+<div id="legend" style="position: absolute; top: 130px; left: 20px; background: white; padding: 10px; font-size: 12px; border-radius: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.2); z-index: 1000;">
+  <b>Legend</b><br/>
+  <div><span style="background:#990000; width:12px; height:12px; display:inline-block;"></span> Solid GOP</div>
+  <div><span style="background:#cc3333; width:12px; height:12px; display:inline-block;"></span> Likely GOP</div>
+  <div><span style="background:#f4a6a6; width:12px; height:12px; display:inline-block;"></span> Lean GOP</div>
+  <div><span style="background:#fadada; width:12px; height:12px; display:inline-block;"></span> Tilt GOP</div>
+  <div><span style="background:#000099; width:12px; height:12px; display:inline-block;"></span> Solid DEM</div>
+  <div><span style="background:#3366cc; width:12px; height:12px; display:inline-block;"></span> Likely DEM</div>
+  <div><span style="background:#a6c8f4; width:12px; height:12px; display:inline-block;"></span> Lean DEM</div>
+  <div><span style="background:#dae9fa; width:12px; height:12px; display:inline-block;"></span> Tilt DEM</div>
+  <div><span style="background:#800080; width:12px; height:12px; display:inline-block;"></span> Solid IND</div>
+  <div><span style="background:#aa00aa; width:12px; height:12px; display:inline-block;"></span> Likely IND</div>
+  <div><span style="background:#d58bd5; width:12px; height:12px; display:inline-block;"></span> Lean IND</div>
+  <div><span style="background:#f0c6f0; width:12px; height:12px; display:inline-block;"></span> Tilt IND</div>
+  <div><span style="background:#999999; width:12px; height:12px; display:inline-block;"></span> Tossup</div>
+  <div><span style="background:#cccccc; width:12px; height:12px; display:inline-block;"></span> Uncalled</div>
+</div>
 </body>
 </html>
