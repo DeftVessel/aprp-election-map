@@ -167,6 +167,7 @@ data.features.forEach(f => {
 const perc_gop = total_reported_votes > 0 ? ((total_gop_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
 const perc_dem = total_reported_votes > 0 ? ((total_dem_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
 const perc_ind = total_reported_votes > 0 ? ((total_ind_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
+const reporting_pct = total_votes > 0 ? ((total_reported_votes / total_votes) * 100).toFixed(1) : '0.0'; // ✅ ADD THIS LINE
 
 document.getElementById('johnson-votes').textContent = ev_johnson;
 document.getElementById('underwood-votes').textContent = ev_underwood;
@@ -176,6 +177,7 @@ document.getElementById('johnson-label').textContent = ev_johnson;
 document.getElementById('underwood-label').textContent = ev_underwood;
 document.getElementById('johnson-pv').textContent = `Johnson: ${total_gop_votes.toLocaleString()} (${perc_gop}%)`;
 document.getElementById('underwood-pv').textContent = `Underwood: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
+document.getElementById('other-pv').textContent = `Other: ${total_ind_votes.toLocaleString()} (${perc_ind}%)`;
 document.getElementById('reporting').textContent = `Reporting: ${reporting_pct}%`;
 
       map.addSource('states', { type: 'geojson', data: data });
