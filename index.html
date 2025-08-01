@@ -162,7 +162,7 @@ data.features.forEach(f => {
   else if (props.status.includes('DEM')) ev_underwood += +props.electoral_votes;
   else if (props.status.includes('IND')) ev_other += +props.electoral_votes;
 }
-
+});
       const total_registered = 104335048;
       const perc_gop = ((total_gop_votes / total_registered) * 100).toFixed(1);
       const perc_dem = ((total_dem_votes / total_registered) * 100).toFixed(1);
