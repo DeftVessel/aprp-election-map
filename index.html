@@ -110,7 +110,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiNW00Y2s3NyIsImEiOiJjbWI4eXFqeDkwbzY1MmpwcDFzZ
       const data = await res.json();
 function determineStatus(gop, dem, ind, reporting) {
   const total = gop + dem + ind;
-  if (total === 0 || reporting < 100) return 'Uncalled';
+  if (total === 0) return 'Uncalled';
 
   const percGOP = gop / total;
   const percDEM = dem / total;
