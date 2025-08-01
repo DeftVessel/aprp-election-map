@@ -259,6 +259,17 @@ data.features.forEach(f => {
       map.on('mouseleave', 'states-fill', () => {
         map.getCanvas().style.cursor = '';
       });
+const hoverPopup = new mapboxgl.Popup({
+  closeButton: false,
+  closeOnClick: false
+});
+
+map.on('mousemove', 'states-fill', (e) => {
+  const p = e.features[0].properties;
+  hoverPopup.setLngLat(e.lngLat)
+    .setHTML(`<strong>${p.NAME}</strong><br/>Status: ${p.status}<br/>Reporting: ${p.reporting}%`)
+    .addTo(map);
+});
 
     } catch (error) {
       console.error('Map load error:', error);
