@@ -186,7 +186,7 @@
         const gopPerc = total > 0 ? ((gop / total) * 100).toFixed(1) : 0;
         const demPerc = total > 0 ? ((dem / total) * 100).toFixed(1) : 0;
         const indPerc = total > 0 ? ((ind / total) * 100).toFixed(1) : 0;
-        const winner = p.winner === 'UNKNOWN' ? 'Uncalled' : p.winner;
+        const winner = (+p.reporting < 100 || p.winner === 'UNKNOWN') ? 'Uncalled' : p.winner;
 
         const gopName = p.gop_candidate || 'Johnson';
         const demName = p.dem_candidate || 'Underwood';
