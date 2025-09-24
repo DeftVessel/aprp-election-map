@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>2000 Live Election Map</title>
+  <title>2004 Live Election Map</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
@@ -72,21 +72,21 @@ html, body {
 </head>
 <body>
 <div id="header">
-  <div class="title">2000 Live Election Map</div>
+  <div class="title">2004 Live Election Map</div>
   <div class="progress-container">
     <div class="candidate-labels">
-      <span>Callahan: <span id="callahan-votes">0</span></span>
+      <span>Buchanan: <span id="callahan-votes">0</span></span>
       <span>Noble: <span id="noble-votes">0</span></span>
     </div>
     <div class="progress-bar-container">
-      <img src="images/robertcallahan.png" alt="Callahan" class="candidate-image">
+      <img src="images/robertcallahan.png" alt="Buchanan" class="candidate-image">
       <div style="width: 100%; position: relative;">
         <div class="threshold-label">270 to Win</div>
         <div class="progress-bar-wrapper">
           <div class="threshold-marker"></div>
-          <div class="progress-bar callahan" id="callahan-bar" style="width: 0%"></div>
+          <div class="progress-bar buchanan" id="buchanan-bar" style="width: 0%"></div>
           <div class="progress-bar noble" id="noble-bar" style="width: 0%"></div>
-          <div class="vote-label" id="callahan-label" style="left: 5px">0</div>
+          <div class="vote-label" id="buchanan-label" style="left: 5px">0</div>
           <div class="vote-label" id="noble-label" style="right: 5px">0</div>
         </div>
       </div>
