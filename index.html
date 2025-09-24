@@ -185,6 +185,12 @@
       color: var(--text-light);
     }
 
+    .mapboxgl-popup-close-button {
+      color: var(--text-light);
+      font-size: 20px;
+      padding: 5px;
+    }
+
     .popup-header {
       background-color: var(--light-bg);
       padding: 10px 15px;
@@ -341,7 +347,7 @@
       </div>
       <img src="https://placehold.co/100x100/3498db/white?text=DG" alt="Gephardt" class="candidate-image">
     </div>
-     <div class="candidate-stats">
+      <div class="candidate-stats">
         <div id="buchanan-pv">Buchanan: 0 (0%)</div>
         <div id="reporting">Reporting: 0%</div>
         <div id="gephardt-pv">Gephardt: 0 (0%)</div>
@@ -425,23 +431,23 @@ function processAndRenderData(data) {
     let nationalTotals = { ev_gop: 0, ev_dem: 0, pv_gop: 0, pv_dem: 0, pv_total: 0 };
 
     data.features.forEach(f => {
-        const p = f.properties;
-        if (p.abbr === 'PR') return;
+      const p = f.properties;
+      if (p.abbr === 'PR') return;
 
-        const gop = +p.votes_gop || 0;
-        const dem = +p.votes_dem || 0;
-        const ind = +p.votes_ind || 0;
-        const totalStateVotes = gop + dem + ind;
+      const gop = +p.votes_gop || 0;
+      const dem = +p.votes_dem || 0;
+      const ind = +p.votes_ind || 0;
+      const totalStateVotes = gop + dem + ind;
 
-        p.status = determineStatus(gop, dem, totalStateVotes);
-        
-        nationalTotals.pv_gop += gop;
-        nationalTotals.pv_dem += dem;
-        nationalTotals.pv_total += totalStateVotes;
+      p.status = determineStatus(gop, dem, totalStateVotes);
+      
+      nationalTotals.pv_gop += gop;
+      nationalTotals.pv_dem += dem;
+      nationalTotals.pv_total += totalStateVotes;
 
-        // Allocate EVs based on status, not just 100% reporting
-        if (p.status.includes('GOP')) nationalTotals.ev_gop += +p.electoral_votes;
-        if (p.status.includes('DEM')) nationalTotals.ev_dem += +p.electoral_votes;
+      // Allocate EVs based on status, not just 100% reporting
+      if (p.status.includes('GOP')) nationalTotals.ev_gop += +p.electoral_votes;
+      if (p.status.includes('DEM')) nationalTotals.ev_dem += +p.electoral_votes;
     });
 
     updateHeaderUI(nationalTotals);
@@ -627,4 +633,3 @@ function createPopupHTML(p) {
 
 </body>
 </html>
-
