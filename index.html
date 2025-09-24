@@ -9,21 +9,23 @@
   <style>
     body { margin: 0; padding: 0; font-family: sans-serif; }
     #map { position: absolute; top: 130px; bottom: 0; width: 100%; }
-    html, body { height: 100%; }
-
+html, body {
+  height: 100%;
+}
     #header {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      background: #222;
-      color: white;
-      padding: 8px 16px;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .hidden { display: none; }
-
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: #222;
+  color: white;
+  padding: 8px 16px; /* ⬅️ reduced from 15px 20px */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hidden {
+  display: none;
+}
     .progress-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 10px; }
     .progress-bar-wrapper {
       display: flex; align-items: center; position: relative;
@@ -66,15 +68,6 @@
     .title {
       font-size: 30px; font-weight: bold; margin-bottom: 10px;
     }
-
-    /* ✅ Keep Mapbox popups from auto-shrinking and remove default padding */
-    .mapboxgl-popup { max-width: none !important; }
-    .mapboxgl-popup-content { padding: 0; }
-
-    /* Optional: small screens can still have the same fixed popup size; map can be panned underneath */
-    @media (max-width: 420px) {
-      .title { font-size: 22px; }
-    }
   </style>
 </head>
 <body>
@@ -110,320 +103,290 @@
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiNW00Y2s3NyIsImEiOiJjbWI4eXFqeDkwbzY1MmpwcDFzZDIwMmVqIn0.6JGe7JWhk28z5D3TLIJQwg';
 
-const map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/light-v10',
-  center: [-98.5795, 39.8283],
-  zoom: 3
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/light-v10',
+    center: [-98.5795, 39.8283],
+    zoom: 3
+  });
+
+  map.on('load', async () => {
+    try {
+      const res = await fetch('https://script.google.com/macros/s/AKfycbzxzzJT-mqKYsVLtanqrw4Utugnf206W2nH_chk6FozzC1gs5gdxsZxHAD-sJ9fI5mlAg/exec');
+      const data = await res.json();
+function determineStatus(gop, dem, ind, reporting) {
+  const total = gop + dem + ind;
+  if (total === 0) return 'Uncalled';
+
+  const percGOP = gop / total;
+  const percDEM = dem / total;
+  const percIND = ind / total;
+
+  const sorted = [
+    { party: 'GOP', value: percGOP },
+    { party: 'DEM', value: percDEM },
+    { party: 'IND', value: percIND }
+  ].sort((a, b) => b.value - a.value);
+
+  const leader = sorted[0];
+  const runnerUp = sorted[1];
+  const margin = leader.value - runnerUp.value;
+
+  if (margin >= 0.20) return `Solid ${leader.party}`;
+  if (margin >= 0.10) return `Likely ${leader.party}`;
+  if (margin >= 0.05) return `Lean ${leader.party}`;
+  if (margin >= 0.02) return `Tilt ${leader.party}`;
+  return 'Tossup';
+}
+data.features.forEach(f => {
+  const gop = +f.properties.votes_gop || 0;
+  const dem = +f.properties.votes_dem || 0;
+  const ind = +f.properties.votes_ind || 0;
+
+  f.properties.status = determineStatus(gop, dem, ind, +f.properties.reporting || 0);
 });
 
-map.on('load', async () => {
-  try {
-    const res = await fetch('https://script.google.com/macros/s/AKfycbzxzzJT-mqKYsVLtanqrw4Utugnf206W2nH_chk6FozzC1gs5gdxsZxHAD-sJ9fI5mlAg/exec');
-    const data = await res.json();
+      let ev_buchanan = 0, ev_gephardt = 0, ev_other = 0, total_gop_votes = 0, total_dem_votes = 0, total_ind_votes = 0, total_votes = 0;
 
-    // ✅ Updated: at 100% reporting always give winner color; if margin < 5% => Tilt (no Tossup)
-    function determineStatus(gop, dem, ind, reporting) {
-      const total = gop + dem + ind;
-      if (total === 0) return 'Uncalled';
-
-      const percGOP = gop / total;
-      const percDEM = dem / total;
-      const percIND = ind / total;
-
-      const sorted = [
-        { party: 'GOP', value: percGOP },
-        { party: 'DEM', value: percDEM },
-        { party: 'IND', value: percIND }
-      ].sort((a, b) => b.value - a.value);
-
-      const leader = sorted[0];
-      const runnerUp = sorted[1];
-      const margin = leader.value - runnerUp.value;
-
-      // Fully reported: force a winner shade even at razor-thin margins
-      if (reporting >= 100) {
-        if (margin >= 0.20) return `Solid ${leader.party}`;
-        if (margin >= 0.10) return `Likely ${leader.party}`;
-        if (margin >= 0.05) return `Lean ${leader.party}`;
-        return `Tilt ${leader.party}`; // < 5% => Tilt for winner
-      }
-
-      // Live (not 100%): keep your normal thresholds incl. Tossup
-      if (margin >= 0.20) return `Solid ${leader.party}`;
-      if (margin >= 0.10) return `Likely ${leader.party}`;
-      if (margin >= 0.05) return `Lean ${leader.party}`;
-      if (margin >= 0.02) return `Tilt ${leader.party}`;
-      return 'Tossup';
-    }
-
-    // Compute per-feature status using updated rule
-    data.features.forEach(f => {
-      const gop = +f.properties.votes_gop || 0;
-      const dem = +f.properties.votes_dem || 0;
-      const ind = +f.properties.votes_ind || 0;
-      const reporting = +f.properties.reporting || 0;
-
-      f.properties.status = determineStatus(gop, dem, ind, reporting);
-    });
-
-    let ev_buchanan = 0, ev_gephardt = 0, ev_other = 0,
-        total_gop_votes = 0, total_dem_votes = 0, total_ind_votes = 0;
-
-    data.features.forEach(f => {
-      const props = f.properties;
-      if (props.abbr === 'PR') return;
-
-      const gop = +props.votes_gop || 0;
-      const dem = +props.votes_dem || 0;
-      const ind = +props.votes_ind || 0;
-      const reporting = +props.reporting || 0;
-
-      total_gop_votes += gop;
-      total_dem_votes += dem;
-      total_ind_votes += ind;
-
-      if (reporting === 100) {
-        if (props.status.includes('GOP')) ev_buchanan += +props.electoral_votes;
-        else if (props.status.includes('DEM')) ev_gephardt += +props.electoral_votes;
-        else if (props.status.includes('IND')) ev_other += +props.electoral_votes;
-      }
-    });
-
-    const total_reported_votes = total_gop_votes + total_dem_votes + total_ind_votes;
-    const total_registered = 101748600;
-
-    const perc_gop = total_reported_votes > 0 ? ((total_gop_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
-    const perc_dem = total_reported_votes > 0 ? ((total_dem_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
-    const perc_ind = total_reported_votes > 0 ? ((total_ind_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
-
-    const reporting_pct = total_registered > 0
-      ? ((total_reported_votes / total_registered) * 100).toFixed(1)
-      : '0.0';
-
-    document.getElementById('buchanan-votes').textContent = ev_buchanan;
-    document.getElementById('gephardt-votes').textContent = ev_gephardt;
-    document.getElementById('buchanan-bar').style.width = `${(ev_buchanan / 538) * 100}%];
-    document.getElementById('gephardt-bar').style.width = `${(ev_gephardt / 538) * 100}%`;
-    document.getElementById('buchanan-label').textContent = ev_buchanan;
-    document.getElementById('gephardt-label').textContent = ev_gephardt;
-    document.getElementById('buchanan-pv').textContent = `Buchanan: ${total_gop_votes.toLocaleString()} (${perc_gop}%)`;
-    document.getElementById('gephardt-pv').textContent = `Gephardt: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
-    document.getElementById('reporting').textContent = `Reporting: ${reporting_pct}%`;
-
-    // Calculate and display the 5 closest states
-    const closestStates = data.features
-      .filter(f => {
-        const g = +f.properties.votes_gop || 0;
-        const d = +f.properties.votes_dem || 0;
-        const i = +f.properties.votes_ind || 0;
-        return g + d + i > 0;
-      })
-      .map(f => {
+      data.features.forEach(f => {
         const props = f.properties;
-        const g = +props.votes_gop || 0;
-        const d = +props.votes_dem || 0;
-        const i = +props.votes_ind || 0;
+        if (props.abbr === 'PR') return;
 
-        const entries = [
-          { name: props.gop_candidate || 'Buchanan', value: g, party: 'GOP' },
-          { name: props.dem_candidate || 'Gephardt', value: d, party: 'DEM' },
-          { name: props.ind_candidate || 'Other', value: i, party: 'IND' }
-        ].sort((a, b) => b.value - a.value);
+        const gop = +props.votes_gop || 0;
+        const dem = +props.votes_dem || 0;
+        const ind = +props.votes_ind || 0;
+        const reporting = +props.reporting || 0;
+        const total = gop + dem + ind;
 
-        const lead = entries[0];
-        const runnerUp = entries[1];
+        total_gop_votes += gop;
+        total_dem_votes += dem;
+        total_ind_votes += ind;
+        total_votes += total;
 
-        return {
-          state: props.NAME,
-          leader: lead.name,
-          party: lead.party,
-          margin: lead.value - runnerUp.value
-        };
-      })
-      .sort((a, b) => a.margin - b.margin)
-      .slice(0, 5);
-
-    const colorMap = { GOP: '#c00', DEM: '#00f', IND: '#800080' };
-    const closestHTML = closestStates.map(s => `
-      <div style="margin-bottom: 5px;">
-        <span style="display: inline-block; width: 12px; height: 12px; background: ${colorMap[s.party]}; border-radius: 50%; margin-right: 6px;"></span>
-        <strong>${s.leader}</strong> leads in <strong>${s.state}</strong> by <strong>${s.margin.toLocaleString()}</strong> votes
-      </div>
-    `).join('');
-    document.getElementById('closest-states').innerHTML = closestHTML;
-
-    map.addSource('states', { type: 'geojson', data: data });
-
-    map.addLayer({
-      id: 'states-fill',
-      type: 'fill',
-      source: 'states',
-      paint: {
-        'fill-color': [
-          'match',
-          ['get', 'status'],
-          // GOP
-          'Solid GOP', '#990000',
-          'Likely GOP', '#cc3333',
-          'Lean GOP', '#f4a6a6',
-          'Tilt GOP', '#fadada',
-          // DEM
-          'Solid DEM', '#000099',
-          'Likely DEM', '#3366cc',
-          'Lean DEM', '#a6c8f4',
-          'Tilt DEM', '#dae9fa',
-          // IND
-          'Solid IND', '#800080',
-          'Likely IND', '#aa00aa',
-          'Lean IND', '#d58bd5',
-          'Tilt IND', '#f0c6f0',
-          // Other
-          'Uncalled', '#cccccc',
-          'Tossup', '#999999',
-          '#ffffff' // fallback
-        ],
-        'fill-opacity': 1.0
-      }
-    });
-
-    map.addLayer({
-      id: 'states-outline',
-      type: 'line',
-      source: 'states',
-      paint: {
-        'line-color': '#000000',
-        'line-width': 2
-      }
-    });
-
-    map.on('click', 'states-fill', (e) => {
-      const p = e.features[0].properties;
-
-      const gop = +p.votes_gop || 0;
-      const dem = +p.votes_dem || 0;
-      const ind = +p.votes_ind || 0;
-      const total = gop + dem + ind;
-      const reporting = +p.reporting || 0;
-
-      const gopPerc = total ? ((gop / total) * 100).toFixed(1) : '0.0';
-      const demPerc = total ? ((dem / total) * 100).toFixed(1) : '0.0';
-      const indPerc = total ? ((ind / total) * 100).toFixed(1) : '0.0';
-
-      const gopName = p.gop_candidate || 'Buchanan';
-      const demName = p.dem_candidate || 'Gephardt';
-      const indName = p.ind_candidate || 'Other';
-
-      // Compute winner locally
-      const entries = [
-        { name: gopName, votes: gop, party: 'GOP' },
-        { name: demName, votes: dem, party: 'DEM' },
-        { name: indName, votes: ind, party: 'IND' }
-      ].sort((a,b) => b.votes - a.votes);
-
-      const winner = (reporting >= 100 && total > 0) ? entries[0].name : null;
-      const winnerVotes = winner ? entries[0].votes : null;
-      const runnerUpVotes = winner ? entries[1].votes : null;
-      const leadMargin = (winner && runnerUpVotes != null) ? (winnerVotes - runnerUpVotes) : null;
-
-      const gopPhoto = 'images/patbuchanan.jpg';
-      const demPhoto = 'images/dickgephart.jpeg';
-      const indPhoto = 'images/Independent.png';
-
-      // ✅ Fixed-size live results popup
-      new mapboxgl.Popup({
-        closeOnClick: false,
-        closeOnMove: false,
-        anchor: 'bottom',
-      })
-      .setLngLat(e.lngLat)
-      .setHTML(`
-        <div style="
-          font-family: sans-serif;
-          width: 290px;          /* fixed width */
-          height: 380px;         /* fixed height */
-          border-radius: 8px;
-          overflow-y: auto;      /* scroll if content exceeds height */
-          box-shadow: 0 0 8px rgba(0,0,0,0.25);
-          background: white;
-        ">
-          <div style="background: #c00; color: white; font-weight: bold; padding: 10px;">
-            ${winner ? 'Projected Winner' : 'Live Results'}
-          </div>
-          <div style="padding: 12px;">
-            <div style="font-size: 16px; font-weight: bold;">President: ${p.NAME}</div>
-            <div style="font-size: 13px; margin-bottom: 12px;">
-              ${p.electoral_votes} electoral votes • ${reporting}% reporting
-            </div>
-
-            <div style="display: flex; align-items: center; margin-bottom: 10px; background: #fdd; padding: 6px; border-radius: 5px;">
-              <img src="${gopPhoto}" style="width: 45px; height: 45px; border-radius: 50%; margin-right: 10px;" />
-              <div style="flex: 1;">
-                <b style="color:#c00;">${winner === gopName ? '✓ ' : ''}${gopName}</b><br/>
-                <small>${gop.toLocaleString()} votes • ${gopPerc}%</small>
-              </div>
-            </div>
-
-            <div style="display: flex; align-items: center; margin-bottom: 10px; background: #ddf; padding: 6px; border-radius: 5px;">
-              <img src="${demPhoto}" style="width: 45px; height: 45px; border-radius: 50%; margin-right: 10px;" />
-              <div style="flex: 1;">
-                <b style="color:#00f;">${winner === demName ? '✓ ' : ''}${demName}</b><br/>
-                <small>${dem.toLocaleString()} votes • ${demPerc}%</small>
-              </div>
-            </div>
-
-            <div style="display: flex; align-items: center; background: #fdf; padding: 6px; border-radius: 5px;">
-              <img src="${indPhoto}" style="width: 45px; height: 45px; border-radius: 50%; margin-right: 10px;" />
-              <div style="flex: 1;">
-                <b style="color:#800080;">${winner === indName ? '✓ ' : ''}${indName}</b><br/>
-                <small>${ind.toLocaleString()} votes • ${indPerc}%</small>
-              </div>
-            </div>
-
-            ${winner && leadMargin > 0 ? `
-              <div style="margin-top: 10px; font-size: 12px; color: #555;">
-                ${winner} leads by ${leadMargin.toLocaleString()} votes
-              </div>` : ''}
-          </div>
-        </div>
-      `)
-      .setMaxWidth('none')  // prevent Mapbox from shrinking at high zooms
-      .addTo(map);
-    });
-
-    const hoverPopup = new mapboxgl.Popup({
-      closeButton: false,
-      closeOnClick: false
-    });
-
-    map.on('mousemove', 'states-fill', (e) => {
-      const p = e.features[0].properties;
-      hoverPopup.setLngLat(e.lngLat)
-        .setHTML(`<strong>${p.NAME}</strong><br/>Status: ${p.status}<br/>Reporting: ${p.reporting}%`)
-        .addTo(map);
-    });
-
-    map.on('mouseleave', 'states-fill', () => {
-      hoverPopup.remove();
-      map.getCanvas().style.cursor = '';
-    });
-
-    map.on('mouseenter', 'states-fill', () => {
-      map.getCanvas().style.cursor = 'pointer';
-    });
-
-  } catch (error) {
-    console.error('Map load error:', error);
-    document.getElementById('map').innerHTML = '<p style="color: red; text-align: center;">Failed to load map. Please check data source or internet connection.</p>';
-  }
+        if (reporting === 100) {
+  if (props.status.includes('GOP')) ev_buchanan += +props.electoral_votes;
+  else if (props.status.includes('DEM')) ev_gephardt += +props.electoral_votes;
+  else if (props.status.includes('IND')) ev_other += +props.electoral_votes;
+}
 });
-</script>
+      const total_reported_votes = total_gop_votes + total_dem_votes + total_ind_votes;
+const total_registered = 101748600;
 
+const perc_gop = total_reported_votes > 0 ? ((total_gop_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
+const perc_dem = total_reported_votes > 0 ? ((total_dem_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
+const perc_ind = total_reported_votes > 0 ? ((total_ind_votes / total_reported_votes) * 100).toFixed(1) : '0.0';
+
+const reporting_pct = total_registered > 0
+  ? ((total_reported_votes / total_registered) * 100).toFixed(1)
+  : '0.0';
+
+
+document.getElementById('buchanan-votes').textContent = ev_buchanan;
+document.getElementById('gephardt-votes').textContent = ev_gephardt;
+document.getElementById('buchanan-bar').style.width = `${(ev_buchanan / 538) * 100}%`;
+document.getElementById('gephardt-bar').style.width = `${(ev_gephardt / 538) * 100}%`;
+document.getElementById('buchanan-label').textContent = ev_buchanan;
+document.getElementById('gephardt-label').textContent = ev_gephardt;
+document.getElementById('buchanan-pv').textContent = `Buchanan: ${total_gop_votes.toLocaleString()} (${perc_gop}%)`;
+document.getElementById('gephardt-pv').textContent = `Gephardt: ${total_dem_votes.toLocaleString()} (${perc_dem}%)`;
+document.getElementById('reporting').textContent = `Reporting: ${reporting_pct}%`;
+
+// Calculate and display the 5 closest states
+const closestStates = data.features
+  .filter(f => {
+    const g = +f.properties.votes_gop || 0;
+    const d = +f.properties.votes_dem || 0;
+    const i = +f.properties.votes_ind || 0;
+    return g + d + i > 0;
+  })
+  .map(f => {
+    const props = f.properties;
+    const g = +props.votes_gop || 0;
+    const d = +props.votes_dem || 0;
+    const i = +props.votes_ind || 0;
+
+    const entries = [
+      { name: props.gop_candidate || 'Buchanan', value: g, party: 'GOP' },
+      { name: props.dem_candidate || 'Gephardt', value: d, party: 'DEM' },
+      { name: props.ind_candidate || 'Other', value: i, party: 'IND' }
+    ].sort((a, b) => b.value - a.value);
+
+    const lead = entries[0];
+    const runnerUp = entries[1];
+
+    return {
+      state: props.NAME,
+      leader: lead.name,
+      party: lead.party,
+      margin: lead.value - runnerUp.value
+    };
+  })
+  .sort((a, b) => a.margin - b.margin)
+  .slice(0, 5);
+
+const colorMap = {
+  GOP: '#c00',
+  DEM: '#00f',
+  IND: '#800080'
+};
+
+const closestHTML = closestStates.map(s => `
+  <div style="margin-bottom: 5px;">
+    <span style="display: inline-block; width: 12px; height: 12px; background: ${colorMap[s.party]}; border-radius: 50%; margin-right: 6px;"></span>
+    <strong>${s.leader}</strong> leads in <strong>${s.state}</strong> by <strong>${s.margin.toLocaleString()}</strong> votes
+  </div>
+`).join('');
+
+document.getElementById('closest-states').innerHTML = closestHTML;
+
+      map.addSource('states', { type: 'geojson', data: data });
+
+      map.addLayer({
+        id: 'states-fill',
+        type: 'fill',
+        source: 'states',
+        paint: {
+         'fill-color': [
+  'match',
+  ['get', 'status'],
+  // GOP
+  'Solid GOP', '#990000',
+  'Likely GOP', '#cc3333',
+  'Lean GOP', '#f4a6a6',
+  'Tilt GOP', '#fadada',
+  // DEM
+  'Solid DEM', '#000099',
+  'Likely DEM', '#3366cc',
+  'Lean DEM', '#a6c8f4',
+  'Tilt DEM', '#dae9fa',
+  // IND
+  'Solid IND', '#800080',
+  'Likely IND', '#aa00aa',
+  'Lean IND', '#d58bd5',
+  'Tilt IND', '#f0c6f0',
+  // Other
+  'Uncalled', '#cccccc',
+  'Tossup', '#999999',
+  '#ffffff' // fallback
+],
+          'fill-opacity': 1.0
+        }
+      });
+
+      map.addLayer({
+        id: 'states-outline',
+        type: 'line',
+        source: 'states',
+        paint: {
+          'line-color': '#000000',
+          'line-width': 2
+        }
+      });
+
+      map.on('click', 'states-fill', (e) => {
+  const p = e.features[0].properties;
+
+  const gop = +p.votes_gop || 0;
+  const dem = +p.votes_dem || 0;
+  const ind = +p.votes_ind || 0;
+  const total = gop + dem + ind;
+  const reporting = +p.reporting || 0;
+
+  const gopPerc = total ? ((gop / total) * 100).toFixed(1) : '0.0';
+  const demPerc = total ? ((dem / total) * 100).toFixed(1) : '0.0';
+  const indPerc = total ? ((ind / total) * 100).toFixed(1) : '0.0';
+
+  const gopName = p.gop_candidate || 'Buchanan';
+  const demName = p.dem_candidate || 'Dephardt';
+  const indName = p.ind_candidate || 'Other';
+
+  const winner = (+reporting < 100 || p.winner === 'UNKNOWN') ? null : p.winner;
+  const winnerVotes = winner === gopName ? gop : winner === demName ? dem : winner === indName ? ind : null;
+  const runnerUpVotes = Math.max(...[gop, dem, ind].filter(v => v !== winnerVotes));
+  const leadMargin = winnerVotes !== null ? winnerVotes - runnerUpVotes : null;
+
+  const gopPhoto = 'images/patbuchanan.jpg';
+  const demPhoto = 'images/dickgephart.jpeg';
+  const indPhoto = 'images/Independent.png';
+
+  new mapboxgl.Popup()
+    .setLngLat(e.lngLat)
+    .setHTML(`
+      <div style="font-family: sans-serif; width: 290px; border-radius: 8px; overflow: hidden; box-shadow: 0 0 8px rgba(0,0,0,0.25);">
+        <div style="background: #c00; color: white; font-weight: bold; padding: 10px;">
+          ${winner ? 'Projected Winner' : 'Live Results'}
+        </div>
+        <div style="padding: 12px; background: white;">
+          <div style="font-size: 16px; font-weight: bold;">President: ${p.NAME}</div>
+          <div style="font-size: 13px; margin-bottom: 12px;">
+            ${p.electoral_votes} electoral votes • ${reporting}% reporting
+          </div>
+
+          <div style="display: flex; align-items: center; margin-bottom: 10px; background: #fdd; padding: 6px; border-radius: 5px;">
+            <img src="${gopPhoto}" style="width: 45px; height: 45px; border-radius: 50%; margin-right: 10px;" />
+            <div style="flex: 1;">
+              <b style="color:#c00;">${winner === gopName ? '✓ ' : ''}${gopName}</b><br/>
+              <small>${gop.toLocaleString()} votes • ${gopPerc}%</small>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; margin-bottom: 10px; background: #ddf; padding: 6px; border-radius: 5px;">
+            <img src="${demPhoto}" style="width: 45px; height: 45px; border-radius: 50%; margin-right: 10px;" />
+            <div style="flex: 1;">
+              <b style="color:#00f;">${winner === demName ? '✓ ' : ''}${demName}</b><br/>
+              <small>${dem.toLocaleString()} votes • ${demPerc}%</small>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; background: #fdf; padding: 6px; border-radius: 5px;">
+            <img src="${indPhoto}" style="width: 45px; height: 45px; border-radius: 50%; margin-right: 10px;" />
+            <div style="flex: 1;">
+              <b style="color:#800080;">${winner === indName ? '✓ ' : ''}${indName}</b><br/>
+              <small>${ind.toLocaleString()} votes • ${indPerc}%</small>
+            </div>
+          </div>
+
+          ${winner && leadMargin > 0 ? `
+            <div style="margin-top: 10px; font-size: 12px; color: #555;">
+              ${winner} leads by ${leadMargin.toLocaleString()} votes
+            </div>` : ''}
+        </div>
+      </div>
+    `)
+    .addTo(map);
+});
+
+      const hoverPopup = new mapboxgl.Popup({
+  closeButton: false,
+  closeOnClick: false
+});
+
+map.on('mousemove', 'states-fill', (e) => {
+  const p = e.features[0].properties;
+  hoverPopup.setLngLat(e.lngLat)
+    .setHTML(`<strong>${p.NAME}</strong><br/>Status: ${p.status}<br/>Reporting: ${p.reporting}%`)
+    .addTo(map);
+});
+
+map.on('mouseleave', 'states-fill', () => {
+  hoverPopup.remove();
+  map.getCanvas().style.cursor = '';
+});
+
+map.on('mouseenter', 'states-fill', () => {
+  map.getCanvas().style.cursor = 'pointer';
+});
+
+    } catch (error) {
+      console.error('Map load error:', error);
+      document.getElementById('map').innerHTML = '<p style="color: red; text-align: center;">Failed to load map. Please check data source or internet connection.</p>';
+    }
+  });
+</script>
 <button onclick="document.getElementById('legend').classList.toggle('hidden')" 
         style="position: absolute; top: 230px; left: 20px; z-index: 1001;">
   Toggle Legend
 </button>
-
 <div id="legend" style="position: absolute; top: 260px; left: 20px; background: white; padding: 10px; font-size: 12px; border-radius: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.2); z-index: 1000;">
   <b>Legend</b><br/>
   <div><span style="background:#990000; width:12px; height:12px; display:inline-block;"></span> Solid GOP</div>
@@ -441,7 +404,6 @@ map.on('load', async () => {
   <div><span style="background:#999999; width:12px; height:12px; display:inline-block;"></span> Tossup</div>
   <div><span style="background:#cccccc; width:12px; height:12px; display:inline-block;"></span> Uncalled</div>
 </div>
-
 <style>
   #aprp-news {
     position: absolute;
@@ -457,11 +419,20 @@ map.on('load', async () => {
     box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
   }
 
-  #aprp-news strong { font-size: 16px; }
+  #aprp-news strong {
+    font-size: 16px;
+  }
 
+  /* ✅ Mobile responsiveness */
   @media (max-width: 600px) {
-    #aprp-news { font-size: 12px; padding: 6px 12px; }
-    #aprp-news strong { font-size: 14px; }
+    #aprp-news {
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+
+    #aprp-news strong {
+      font-size: 14px;
+    }
   }
 </style>
 
