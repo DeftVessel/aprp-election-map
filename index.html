@@ -336,7 +336,7 @@
       <span class="gephardt">Gephardt: <span id="gephardt-votes">0</span></span>
     </div>
     <div class="progress-bar-container">
-      <img src="https://placehold.co/100x100/e74c3c/white?text=PB" alt="Buchanan" class="candidate-image">
+      <img src="images/patbuchanan.jpg" alt="Buchanan" class="candidate-image">
       <div style="width: 100%; position: relative;">
         <div class="threshold-label">270</div>
         <div class="progress-bar-wrapper">
@@ -345,7 +345,7 @@
           <div class="progress-bar gephardt" id="gephardt-bar" style="width: 0%"></div>
         </div>
       </div>
-      <img src="https://placehold.co/100x100/3498db/white?text=DG" alt="Gephardt" class="candidate-image">
+      <img src="images/dickgephart.jpeg" alt="Gephardt" class="candidate-image">
     </div>
       <div class="candidate-stats">
         <div id="buchanan-pv">Buchanan: 0 (0%)</div>
@@ -584,8 +584,8 @@ function createPopupHTML(p) {
     const leanText = p.status.includes('Tossup') || p.status.includes('Uncalled') ? p.status.toUpperCase() : `STATE LEAN: ${p.status.toUpperCase()}`;
     const dialGradient = total > 0 ? `linear-gradient(to right, var(--gop-color) ${100 - (gopPerc + demPerc / 2)}%, var(--dem-color) ${(gopPerc + demPerc / 2)}%)` : 'var(--light-bg)';
     
-    const gopPhoto = 'https://placehold.co/80x80/e74c3c/white?text=PB';
-    const demPhoto = 'https://placehold.co/80x80/3498db/white?text=DG';
+    const gopPhoto = 'images/patbuchanan.jpg';
+    const demPhoto = 'images/dickgephart.jpeg';
     const indPhoto = 'https://placehold.co/80x80/9b59b6/white?text=I';
 
     return `
