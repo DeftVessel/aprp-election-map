@@ -200,8 +200,7 @@
             font-family: 'Inter', sans-serif;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            width: 290px;
-            max-width: 90vw; /* Make it responsive */
+            width: 250px;
             background: var(--dark-bg);
             color: var(--text-light);
         }
@@ -304,16 +303,16 @@
             text-transform: uppercase;
         }
         .triangle-chart {
-            width: 150px;
-            height: 129.9px; /* Equilateral height for 150px base */
+            width: 120px;
+            height: 103.92px; /* Equilateral height for 120px base */
             position: relative;
             margin: 0 auto;
             clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
             background: linear-gradient(to right, var(--gop-color), var(--dem-color));
         }
         .triangle-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: white;
             position: absolute;
@@ -769,8 +768,8 @@
             const leanText = p.status.includes('Tossup') || p.status.includes('Uncalled') ? p.status.toUpperCase() : `STATE LEAN: ${p.status.toUpperCase()}`;
 
             // Calculate dot position for triangle chart based on a three-way split
-            const chartWidth = 150;
-            const chartHeight = 129.9; // Equilateral height for 150px base
+            const chartWidth = 120;
+            const chartHeight = 103.92; // Equilateral height for 120px base
             
             let dotX = 0;
             let dotY = 0;
