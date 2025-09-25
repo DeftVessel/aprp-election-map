@@ -128,6 +128,7 @@
             border-radius: 12px;
             overflow: hidden;
             display: flex;
+            justify-content: space-between;
         }
         
         .progress-bar {
@@ -135,7 +136,6 @@
             transition: width 0.5s ease-in-out;
             display: flex;
             align-items: center;
-            justify-content: center;
             color: white;
             font-weight: bold;
             font-size: 12px;
@@ -144,10 +144,14 @@
         
         .progress-bar.dem {
             background-color: var(--dem-color);
+            justify-content: flex-start; /* Align text to the left for DEM bar */
+            padding-left: 10px;
         }
         
         .progress-bar.gop {
             background-color: var(--gop-color);
+            justify-content: flex-end; /* Align text to the right for GOP bar */
+            padding-right: 10px;
         }
         
         .threshold-marker {
@@ -201,7 +205,7 @@
         /* --- Popup Styles --- */
         .mapboxgl-popup-content {
             padding: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', sans-family;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             width: 250px; /* Fixed width */
@@ -481,8 +485,7 @@
                 <div style="width: 100%; position: relative;">
                     <div class="threshold-label">270</div>
                     <div class="progress-bar-wrapper">
-                        <div class="threshold-marker"></div>
-                        <div class="progress-bar" id="ev-bar"></div>
+                        <!-- Bars will be added here by JavaScript -->
                     </div>
                 </div>
                 <img src="images/dickgephart.jpeg" alt="Gephardt" class="candidate-image">
@@ -536,7 +539,7 @@
         const mapContainer = document.getElementById('map');
         const buchananVotesEl = document.getElementById('buchanan-votes');
         const gephardtVotesEl = document.getElementById('gephardt-votes');
-        const evBar = document.getElementById('ev-bar');
+        const evBarWrapper = document.querySelector('.progress-bar-wrapper');
         const buchananPvEl = document.getElementById('buchanan-pv');
         const gephardtPvEl = document.getElementById('gephardt-pv');
         const reportingEl = document.getElementById('reporting');
@@ -641,30 +644,42 @@
             const perc_gop = pv_total > 0 ? ((pv_gop / pv_total) * 100).toFixed(1) : '0.0';
             const perc_dem = pv_total > 0 ? ((pv_dem / pv_total) * 100).toFixed(1) : '0.0';
             const reporting_pct = TOTAL_REGISTERED_VOTERS > 0 ? ((pv_total / TOTAL_REGISTERED_VOTERS) * 100).toFixed(1) : '0.0';
-            const totalEv = ev_gop + ev_dem;
-            const buchananEvPerc = (ev_gop / TOTAL_ELECTORAL_VOTES) * 100;
-            const gephardtEvPerc = (ev_dem / TOTAL_ELECTORAL_VOTES) * 100;
+            
+            const gopEvPerc = (ev_gop / TOTAL_ELECTORAL_VOTES) * 100;
+            const demEvPerc = (ev_dem / TOTAL_ELECTORAL_VOTES) * 100;
+            
+            // Clear existing bars
+            evBarWrapper.innerHTML = '';
+            
+            // Create the GOP bar (left side, growing right)
+            const gopBar = document.createElement('div');
+            gopBar.classList.add('progress-bar', 'gop');
+            gopBar.style.width = `${gopEvPerc}%`;
+            gopBar.style.maxWidth = `calc(270 / 538 * 100%)`; // Cap at 270 threshold
+            gopBar.textContent = ev_gop > 0 ? ev_gop : ''; // Only show count if > 0
+            
+            // Create the DEM bar (right side, growing left)
+            const demBar = document.createElement('div');
+            demBar.classList.add('progress-bar', 'dem');
+            demBar.style.width = `${demEvPerc}%`;
+            demBar.style.maxWidth = `calc(270 / 538 * 100%)`; // Cap at 270 threshold
+            demBar.textContent = ev_dem > 0 ? ev_dem : ''; // Only show count if > 0
+            
+            // Create the threshold marker
+            const thresholdMarker = document.createElement('div');
+            thresholdMarker.classList.add('threshold-marker');
+            
+            // Append elements
+            evBarWrapper.appendChild(gopBar);
+            evBarWrapper.appendChild(demBar);
+            evBarWrapper.appendChild(thresholdMarker);
 
+            // Update text content
             buchananVotesEl.textContent = ev_gop;
             gephardtVotesEl.textContent = ev_dem;
             buchananPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
             gephardtPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
             reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
-
-            if (ev_gop > ev_dem) {
-                evBar.style.width = `${(ev_gop / TOTAL_ELECTORAL_VOTES) * 100}%`;
-                evBar.style.backgroundColor = 'var(--gop-color)';
-                evBar.textContent = ev_gop;
-                evBar.style.justifyContent = 'flex-start';
-            } else if (ev_dem > ev_gop) {
-                evBar.style.width = `${(ev_dem / TOTAL_ELECTORAL_VOTES) * 100}%`;
-                evBar.style.backgroundColor = 'var(--dem-color)';
-                evBar.textContent = ev_dem;
-                evBar.style.justifyContent = 'flex-end';
-            } else {
-                evBar.style.width = '0%';
-                evBar.textContent = '';
-            }
         }
 
         function updateKeyRacesTicker(data) {
