@@ -11,16 +11,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* Refined color palette for a more realistic feel */
             --gop-color: #e74c3c;
             --dem-color: #3498db;
             --ind-color: #9b59b6;
             --gop-light: #fdeded;
             --dem-light: #eaf2f8;
             --ind-light: #f5eef8;
-            --dark-bg: #1f2937;
-            --light-bg: #374151;
+            --dark-bg: #111827;
+            --light-bg: #1f2937;
             --text-light: #f9fafb;
-            --text-medium: #d1d5db;
+            --text-medium: #9ca3af;
             --winner-bg: #27ae60;
         }
 
@@ -39,7 +40,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(31, 41, 55, 0.9);
+            background: rgba(17, 24, 39, 0.9);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -57,11 +58,11 @@
             background: var(--winner-bg);
             color: white;
             text-align: center;
-            padding: 10px;
+            padding: 15px;
             font-size: 1.2em;
             font-weight: bold;
             z-index: 1500;
-            transition: top 0.5s ease-in-out;
+            transition: top 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
@@ -78,19 +79,21 @@
             left: 0;
             right: 0;
             background: var(--dark-bg);
-            padding: 10px 20px;
+            padding: 15px 20px;
             z-index: 1000;
             display: flex;
             flex-direction: column;
             align-items: center;
             border-bottom: 2px solid var(--light-bg);
             gap: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
         .title {
             font-size: 24px;
             font-weight: 900;
             letter-spacing: -1px;
+            color: var(--text-light);
         }
 
         .progress-container {
@@ -114,6 +117,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--light-bg);
+            flex-shrink: 0;
         }
 
         .progress-bar-wrapper {
@@ -200,7 +204,7 @@
             font-family: 'Inter', sans-serif;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            width: 250px;
+            width: 250px; /* Fixed width */
             background: var(--dark-bg);
             color: var(--text-light);
         }
@@ -238,8 +242,9 @@
             display: flex;
             align-items: center;
             margin-bottom: 8px;
-            padding: 8px;
+            padding: 10px;
             border-radius: 6px;
+            transition: all 0.3s ease;
         }
 
         .candidate-row.gop {
@@ -249,9 +254,22 @@
         .candidate-row.dem {
             background-color: rgba(52, 152, 219, 0.1);
         }
-
-        .candidate-row.ind {
-            background-color: rgba(155, 89, 182, 0.1);
+        
+        /* Highlight for the winning candidate */
+        .candidate-row.winner {
+            background: var(--winner-bg);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+        }
+        
+        .candidate-row.winner b {
+            color: white !important;
+        }
+        
+        .candidate-row.winner .percentage {
+            color: white !important;
         }
 
         .candidate-row img {
@@ -259,6 +277,8 @@
             height: 40px;
             border-radius: 50%;
             margin-right: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .candidate-row .info {
@@ -303,8 +323,8 @@
             text-transform: uppercase;
         }
         .triangle-chart {
-            width: 120px;
-            height: 103.92px; /* Equilateral height for 120px base */
+            width: 100px; /* Smaller size */
+            height: 86.6px; /* Equilateral height for 100px base */
             position: relative;
             margin: 0 auto;
             clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
@@ -347,7 +367,20 @@
             color: var(--ind-color);
             text-align: center;
         }
-
+        
+        /* Map hover effect */
+        .mapboxgl-canvas {
+            cursor: pointer;
+        }
+        
+        .mapboxgl-popup {
+            pointer-events: none;
+        }
+        
+        .mapboxgl-popup-content {
+            pointer-events: auto;
+        }
+        
         /* --- News Ticker --- */
         #aprp-news {
             position: absolute;
@@ -402,7 +435,7 @@
         .hidden {
             display: none;
         }
-
+        
         @media (max-width: 600px) {
             #header {
                 padding: 10px;
@@ -425,16 +458,6 @@
             .candidate-labels,
             .candidate-stats {
                 font-size: 11px;
-            }
-
-            #legend {
-                top: 220px;
-                left: 10px;
-            }
-
-            button[onclick*="legend"] {
-                top: 185px;
-                left: 10px;
             }
         }
     </style>
@@ -569,8 +592,8 @@
                 const ind = +p.votes_ind || 0;
                 const totalStateVotes = gop + dem + ind;
 
-                // Update state status
-                p.status = determineStatus(gop, dem, totalStateVotes);
+                // Update state status based on reporting percentage
+                p.status = determineStatus(gop, dem, totalStateVotes, p.reporting);
 
                 // Add to national popular vote totals
                 nationalTotals.pv_gop += gop;
@@ -589,7 +612,14 @@
             checkWinner(nationalTotals);
         }
 
-        function determineStatus(gop, dem, total) {
+        function determineStatus(gop, dem, total, reporting) {
+            // If reporting is 100%, it's a solid win for the winner
+            if (reporting === 100) {
+                if (gop > dem) return 'Solid GOP';
+                if (dem > gop) return 'Solid DEM';
+            }
+            
+            // For states with less than 100% reporting
             if (total === 0) return 'Uncalled';
             const margin = Math.abs(gop - dem) / total;
             const leader = gop > dem ? 'GOP' : 'DEM';
@@ -766,23 +796,27 @@
             const indPerc = total ? (ind / total) * 100 : 0;
 
             const leanText = p.status.includes('Tossup') || p.status.includes('Uncalled') ? p.status.toUpperCase() : `STATE LEAN: ${p.status.toUpperCase()}`;
-
+            
+            // Determine the leading candidate to highlight their row
+            let gopRowClass = 'gop';
+            let demRowClass = 'dem';
+            if (gop > dem) {
+                gopRowClass += ' winner';
+            } else if (dem > gop) {
+                demRowClass += ' winner';
+            }
+            
             // Calculate dot position for triangle chart based on a three-way split
-            const chartWidth = 120;
-            const chartHeight = 103.92; // Equilateral height for 120px base
+            const chartWidth = 100;
+            const chartHeight = 86.6; // Equilateral height for 100px base
             
             let dotX = 0;
             let dotY = 0;
 
             if (total > 0) {
-                // X position: a linear scale from DEM to GOP, with 0 being the center.
-                // Y position: based on the independent vote share.
-                // This correctly places the dot in a ternary plot.
                 dotX = (demPerc - gopPerc) / 100 * (chartWidth / 2) + (chartWidth / 2);
                 dotY = indPerc / 100 * chartHeight;
             } else {
-                // For an uncalled state with no votes, place the dot in the geometric center.
-                // The center of an equilateral triangle is 1/3 of the way up.
                 dotX = chartWidth / 2;
                 dotY = chartHeight / 3;
             }
@@ -797,14 +831,14 @@
                     <p>${p.electoral_votes} EV • ${p.reporting}% est. reporting</p>
                 </div>
                 <div class="popup-body">
-                    <div class="candidate-row gop">
+                    <div class="candidate-row ${gopRowClass}">
                         <img src="${gopPhoto}" onerror="this.onerror=null; this.src='https://placehold.co/80x80/e74c3c/white?text=GOP';" />
                         <div class="info">
                             <b>${CANDIDATE_GOP}</b><small>${gop.toLocaleString()} votes</small>
                         </div>
                         <div class="percentage">${gopPerc.toFixed(1)}%</div>
                     </div>
-                     <div class="candidate-row dem">
+                     <div class="candidate-row ${demRowClass}">
                         <img src="${demPhoto}" onerror="this.onerror=null; this.src='https://placehold.co/80x80/3498db/white?text=DEM';" />
                         <div class="info">
                             <b>${CANDIDATE_DEM}</b><small>${dem.toLocaleString()} votes</small>
