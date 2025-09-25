@@ -201,6 +201,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             width: 290px;
+            max-width: 90vw; /* Make it responsive */
             background: var(--dark-bg);
             color: var(--text-light);
         }
@@ -303,8 +304,8 @@
             text-transform: uppercase;
         }
         .triangle-chart {
-            width: 180px;
-            height: 155.88px; /* For equilateral triangle */
+            width: 150px;
+            height: 129.9px; /* Equilateral height for 150px base */
             position: relative;
             margin: 0 auto;
             clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
@@ -319,23 +320,33 @@
             box-shadow: 0 0 5px rgba(0,0,0,0.5);
             z-index: 10;
         }
-        .triangle-labels {
+        .triangle-labels-bottom {
             display: flex;
             justify-content: space-between;
             position: absolute;
-            width: 180px;
+            width: 100%;
             bottom: -5px;
+            left: 0;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-medium);
+            padding: 0 10px;
+        }
+        .triangle-labels-bottom .dem {
+            color: var(--dem-color);
+        }
+        .triangle-labels-bottom .gop {
+            color: var(--gop-color);
+        }
+        .triangle-labels-top {
+            position: absolute;
+            top: 2px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 12px;
             font-weight: bold;
-            color: var(--text-medium);
-        }
-        .triangle-labels .dem {
-            color: var(--dem-color);
-        }
-        .triangle-labels .gop {
-            color: var(--gop-color);
+            color: var(--ind-color);
+            text-align: center;
         }
 
         /* --- News Ticker --- */
@@ -758,18 +769,23 @@
             const leanText = p.status.includes('Tossup') || p.status.includes('Uncalled') ? p.status.toUpperCase() : `STATE LEAN: ${p.status.toUpperCase()}`;
 
             // Calculate dot position for triangle chart based on a three-way split
-            const chartWidth = 180;
-            const chartHeight = 155.88; // Height for equilateral triangle of base 180
+            const chartWidth = 150;
+            const chartHeight = 129.9; // Equilateral height for 150px base
             
             let dotX = 0;
             let dotY = 0;
 
             if (total > 0) {
-                // X position: a linear scale from GOP to DEM, centered at 0 difference.
+                // X position: a linear scale from DEM to GOP, with 0 being the center.
                 // Y position: based on the independent vote share.
                 // This correctly places the dot in a ternary plot.
-                dotX = ((demPerc - gopPerc) / 100) * (chartWidth / 2) + (chartWidth / 2);
-                dotY = (indPerc / 100) * chartHeight; // Corrected to calculate position from the top
+                dotX = (demPerc - gopPerc) / 100 * (chartWidth / 2) + (chartWidth / 2);
+                dotY = indPerc / 100 * chartHeight;
+            } else {
+                // For an uncalled state with no votes, place the dot in the geometric center.
+                // The center of an equilateral triangle is 1/3 of the way up.
+                dotX = chartWidth / 2;
+                dotY = chartHeight / 3;
             }
             
             const gopPhoto = 'images/patbuchanan.jpg';
@@ -783,14 +799,14 @@
                 </div>
                 <div class="popup-body">
                     <div class="candidate-row gop">
-                        <img src="${gopPhoto}" />
+                        <img src="${gopPhoto}" onerror="this.onerror=null; this.src='https://placehold.co/80x80/e74c3c/white?text=GOP';" />
                         <div class="info">
                             <b>${CANDIDATE_GOP}</b><small>${gop.toLocaleString()} votes</small>
                         </div>
                         <div class="percentage">${gopPerc.toFixed(1)}%</div>
                     </div>
                      <div class="candidate-row dem">
-                        <img src="${demPhoto}" />
+                        <img src="${demPhoto}" onerror="this.onerror=null; this.src='https://placehold.co/80x80/3498db/white?text=DEM';" />
                         <div class="info">
                             <b>${CANDIDATE_DEM}</b><small>${dem.toLocaleString()} votes</small>
                         </div>
@@ -807,13 +823,15 @@
                 </div>
                 <div class="triangle-container">
                     <h4>${leanText}</h4>
+                    <div class="triangle-labels-top">
+                        Other
+                    </div>
                     <div class="triangle-chart">
                         <div class="triangle-dot" style="left: ${dotX}px; bottom: ${dotY}px; transform: translate(-50%, 0);"></div>
                     </div>
-                    <div class="triangle-labels">
-                        <span class="gop">${CANDIDATE_GOP.split(' ')[1]}</span>
-                        <span class="ind">Other</span>
-                        <span class="dem">${CANDIDATE_DEM.split(' ')[1]}</span>
+                    <div class="triangle-labels-bottom">
+                        <span class="gop">Buchanan</span>
+                        <span class="dem">Gephardt</span>
                     </div>
                 </div>
             `;
