@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>2004 Live Election Map</title>
+    <title>2008 Live Election Map</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
@@ -184,11 +184,11 @@
             max-width: 800px;
         }
 
-        .candidate-labels .buchanan {
+        .candidate-labels .warner {
             color: var(--gop-color);
         }
 
-        .candidate-labels .gephardt {
+        .candidate-labels .watson {
             color: var(--dem-color);
         }
 
@@ -473,27 +473,27 @@
     <div id="winner-banner"></div>
 
     <div id="header">
-        <div class="title">2004 Presidential Election</div>
+        <div class="title">2008 Presidential Election</div>
         <div class="progress-container">
             <div class="candidate-labels">
-                <span class="buchanan">Buchanan: <span id="buchanan-votes">0</span></span>
+                <span class="warner">warner: <span id="warner-votes">0</span></span>
                 <span>270 TO WIN</span>
-                <span class="gephardt">Gephardt: <span id="gephardt-votes">0</span></span>
+                <span class="watson">watson: <span id="watson-votes">0</span></span>
             </div>
             <div class="progress-bar-container">
-                <img src="images/patbuchanan.jpg" alt="Buchanan" class="candidate-image">
+                <img src="images/patwarner.jpg" alt="warner" class="candidate-image">
                 <div style="width: 100%; position: relative;">
                     <div class="threshold-label">270</div>
                     <div class="progress-bar-wrapper">
                         <!-- Bars will be added here by JavaScript -->
                     </div>
                 </div>
-                <img src="images/dickgephart.jpeg" alt="Gephardt" class="candidate-image">
+                <img src="images/dickgephart.jpeg" alt="watson" class="candidate-image">
             </div>
             <div class="candidate-stats">
-                <div id="buchanan-pv">Buchanan: 0 (0%)</div>
+                <div id="warner-pv">warner: 0 (0%)</div>
                 <div id="reporting">Est. Reporting: 0%</div>
-                <div id="gephardt-pv">Gephardt: 0 (0%)</div>
+                <div id="watson-pv">watson: 0 (0%)</div>
             </div>
         </div>
     </div>
@@ -526,8 +526,8 @@
 
     <script>
         // --- Constants ---
-        const CANDIDATE_GOP = 'Pat Buchanan';
-        const CANDIDATE_DEM = 'Dick Gephardt';
+        const CANDIDATE_GOP = 'Pat warner';
+        const CANDIDATE_DEM = 'Dick watson';
         const ELECTORAL_VOTES_TO_WIN = 270;
         const TOTAL_ELECTORAL_VOTES = 538;
         const TOTAL_REGISTERED_VOTERS = 101748600;
@@ -537,11 +537,11 @@
         const loader = document.getElementById('loader');
         const winnerBanner = document.getElementById('winner-banner');
         const mapContainer = document.getElementById('map');
-        const buchananVotesEl = document.getElementById('buchanan-votes');
-        const gephardtVotesEl = document.getElementById('gephardt-votes');
+        const warnerVotesEl = document.getElementById('warner-votes');
+        const watsonVotesEl = document.getElementById('watson-votes');
         const evBarWrapper = document.querySelector('.progress-bar-wrapper');
-        const buchananPvEl = document.getElementById('buchanan-pv');
-        const gephardtPvEl = document.getElementById('gephardt-pv');
+        const warnerPvEl = document.getElementById('warner-pv');
+        const watsonPvEl = document.getElementById('watson-pv');
         const reportingEl = document.getElementById('reporting');
         const closestStatesEl = document.getElementById('closest-states');
 
@@ -675,10 +675,10 @@
             evBarWrapper.appendChild(thresholdMarker);
 
             // Update text content
-            buchananVotesEl.textContent = ev_gop;
-            gephardtVotesEl.textContent = ev_dem;
-            buchananPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
-            gephardtPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
+            warnerVotesEl.textContent = ev_gop;
+            watsonVotesEl.textContent = ev_dem;
+            warnerPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
+            watsonPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
             reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
         }
 
@@ -836,9 +836,9 @@
                 dotY = chartHeight / 3;
             }
             
-            const gopPhoto = 'images/patbuchanan.jpg';
-            const demPhoto = 'images/dickgephart.jpeg';
-            const indPhoto = 'https://placehold.co/80x80/9b59b6/white?text=I';
+            const gopPhoto = 'images/austinwarner.png';
+            const demPhoto = 'images/daniellawatson.png';
+            const indPhoto = 'images/richardjohnson.png';
 
             return `
                 <div class="popup-header">
@@ -878,8 +878,8 @@
                         <div class="triangle-dot" style="left: ${dotX}px; bottom: ${dotY}px; transform: translate(-50%, 0);"></div>
                     </div>
                     <div class="triangle-labels-bottom">
-                        <span class="gop">Buchanan</span>
-                        <span class="dem">Gephardt</span>
+                        <span class="gop">warner</span>
+                        <span class="dem">watson</span>
                     </div>
                 </div>
             `;
