@@ -184,11 +184,11 @@
             max-width: 800px;
         }
 
-        .candidate-labels .warner {
+        .candidate-labels .Warner {
             color: var(--gop-color);
         }
 
-        .candidate-labels .watson {
+        .candidate-labels .Watson {
             color: var(--dem-color);
         }
 
@@ -476,7 +476,7 @@
         <div class="title">2008 Presidential Election</div>
         <div class="progress-container">
             <div class="candidate-labels">
-                <span class="warner">warner: <span id="warner-votes">0</span></span>
+                <span class="Warner">warner: <span id="Warner-votes">0</span></span>
                 <span>270 TO WIN</span>
                 <span class="watson">watson: <span id="watson-votes">0</span></span>
             </div>
@@ -537,11 +537,11 @@
         const loader = document.getElementById('loader');
         const winnerBanner = document.getElementById('winner-banner');
         const mapContainer = document.getElementById('map');
-        const warnerVotesEl = document.getElementById('warner-votes');
-        const watsonVotesEl = document.getElementById('watson-votes');
+        const WarnerVotesEl = document.getElementById('Warner-votes');
+        const WatsonVotesEl = document.getElementById('Watson-votes');
         const evBarWrapper = document.querySelector('.progress-bar-wrapper');
-        const warnerPvEl = document.getElementById('warner-pv');
-        const watsonPvEl = document.getElementById('watson-pv');
+        const WarnerPvEl = document.getElementById('Warner-pv');
+        const WatsonPvEl = document.getElementById('Watson-pv');
         const reportingEl = document.getElementById('reporting');
         const closestStatesEl = document.getElementById('closest-states');
 
@@ -675,10 +675,10 @@
             evBarWrapper.appendChild(thresholdMarker);
 
             // Update text content
-            warnerVotesEl.textContent = ev_gop;
-            watsonVotesEl.textContent = ev_dem;
-            warnerPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
-            watsonPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
+            WarnerVotesEl.textContent = ev_gop;
+            WatsonVotesEl.textContent = ev_dem;
+            WarnerPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
+            WatsonPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
             reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
         }
 
@@ -864,7 +864,7 @@
                     <div class="candidate-row ind">
                         <img src="${indPhoto}" />
                         <div class="info">
-                            <b>Richard Johnson</b><small>${ind.toLocaleString()} votes</small>
+                            <b>Other</b><small>${ind.toLocaleString()} votes</small>
                         </div>
                         <div class="percentage">${indPerc.toFixed(1)}%</div>
                     </div>` : ''}
@@ -872,14 +872,14 @@
                 <div class="triangle-container">
                     <h4>${leanText}</h4>
                     <div class="triangle-labels-top">
-                        Richard Johnson
+                        Other
                     </div>
                     <div class="triangle-chart">
                         <div class="triangle-dot" style="left: ${dotX}px; bottom: ${dotY}px; transform: translate(-50%, 0);"></div>
                     </div>
                     <div class="triangle-labels-bottom">
-                        <span class="gop">warner</span>
-                        <span class="dem">watson</span>
+                        <span class="gop">Warner</span>
+                        <span class="dem">Watson</span>
                     </div>
                 </div>
             `;
