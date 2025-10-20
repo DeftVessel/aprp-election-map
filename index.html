@@ -188,7 +188,7 @@
             color: var(--gop-color);
         }
 
-        .candidate-labels .Watson {
+        .candidate-labels .Taylor {
             color: var(--dem-color);
         }
 
@@ -478,7 +478,7 @@
             <div class="candidate-labels">
                 <span class="Warner">Warner: <span id="Warner-votes">0</span></span>
                 <span>270 TO WIN</span>
-                <span class="Watson">Watson: <span id="Watson-votes">0</span></span>
+                <span class="Taylor">Taylor: <span id="Taylor-votes">0</span></span>
             </div>
             <div class="progress-bar-container">
                 <img src="images/austinwarner.png" alt="Warner" class="candidate-image">
@@ -488,12 +488,12 @@
                         <!-- Bars will be added here by JavaScript -->
                     </div>
                 </div>
-                <img src="images/daniellawatson.png" alt="Watson" class="candidate-image">
+                <img src="images/jackietaylor.jpg" alt="Taylor" class="candidate-image">
             </div>
             <div class="candidate-stats">
                 <div id="Warner-pv">Warner: 0 (0%)</div>
                 <div id="reporting">Est. Reporting: 0%</div>
-                <div id="Watson-pv">Watson: 0 (0%)</div>
+                <div id="Taylor-pv">Taylor: 0 (0%)</div>
             </div>
         </div>
     </div>
@@ -527,7 +527,7 @@
     <script>
         // --- Constants ---
         const CANDIDATE_GOP = 'Austin Warner';
-        const CANDIDATE_DEM = 'Daniella Watson';
+        const CANDIDATE_DEM = 'Daniella Taylor';
         const ELECTORAL_VOTES_TO_WIN = 270;
         const TOTAL_ELECTORAL_VOTES = 538;
         const TOTAL_REGISTERED_VOTERS = 101748600;
@@ -538,10 +538,10 @@
         const winnerBanner = document.getElementById('winner-banner');
         const mapContainer = document.getElementById('map');
         const WarnerVotesEl = document.getElementById('Warner-votes');
-        const WatsonVotesEl = document.getElementById('Watson-votes');
+        const TaylorVotesEl = document.getElementById('Taylor-votes');
         const evBarWrapper = document.querySelector('.progress-bar-wrapper');
         const WarnerPvEl = document.getElementById('Warner-pv');
-        const WatsonPvEl = document.getElementById('Watson-pv');
+        const TaylorPvEl = document.getElementById('Taylor-pv');
         const reportingEl = document.getElementById('reporting');
         const closestStatesEl = document.getElementById('closest-states');
 
@@ -676,9 +676,9 @@
 
             // Update text content
             WarnerVotesEl.textContent = ev_gop;
-            WatsonVotesEl.textContent = ev_dem;
+            TaylorVotesEl.textContent = ev_dem;
             WarnerPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
-            WatsonPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
+            TaylorPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
             reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
         }
 
@@ -837,7 +837,7 @@
             }
             
             const gopPhoto = 'images/austinwarner.png';
-            const demPhoto = 'images/daniellawatson.png';
+            const demPhoto = 'images/jackietaylor.jpg';
             const indPhoto = 'images/richardjohnson.png';
 
             return `
@@ -879,7 +879,7 @@
                     </div>
                     <div class="triangle-labels-bottom">
                         <span class="gop">Warner</span>
-                        <span class="dem">Watson</span>
+                        <span class="dem">Taylor</span>
                     </div>
                 </div>
             `;
