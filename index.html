@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>2008 Live Election Map</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <style>
     :root{
-      --gop-color:#e74c3c;--dem-color:#3498db;--ind-color:#9b59b6;
-      --gop-light:#fdeded;--dem-light:#eaf2f8;--ind-light:#f5eef8;
-      --dark-bg:#111827;--light-bg:#1f2937;--text-light:#f9fafb;--text-medium:#9ca3af;--winner-bg:#27ae60;
+      --gop-color:#e74c3c; --dem-color:#3498db; --ind-color:#9b59b6;
+      --gop-light:#fdeded; --dem-light:#eaf2f8; --ind-light:#f5eef8;
+      --dark-bg:#111827; --light-bg:#1f2937; --text-light:#f9fafb; --text-medium:#9ca3af; --winner-bg:#27ae60;
     }
     body{margin:0;padding:0;font-family:'Inter',sans-serif;background-color:var(--dark-bg);color:var(--text-light);overflow:hidden}
-    #loader{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(17,24,39,.9);display:flex;justify-content:center;align-items:center;font-size:1.5em;color:var(--text-light);z-index:2000;transition:opacity .5s ease}
+    #loader{position:absolute;inset:0;background:rgba(17,24,39,.9);display:flex;justify-content:center;align-items:center;font-size:1.5em;color:var(--text-light);z-index:2000;transition:opacity .5s ease}
     #winner-banner{position:absolute;top:-100px;left:0;right:0;background:var(--winner-bg);color:#fff;text-align:center;padding:15px;font-size:1.2em;font-weight:bold;z-index:1500;transition:top .5s cubic-bezier(.68,-.55,.27,1.55);box-shadow:0 4px 10px rgba(0,0,0,.3)}
     #map{position:absolute;top:155px;bottom:45px;width:100%}
     #header{position:absolute;top:0;left:0;right:0;background:var(--dark-bg);padding:15px 20px;z-index:1000;display:flex;flex-direction:column;align-items:center;border-bottom:2px solid var(--light-bg);gap:12px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
@@ -24,46 +24,36 @@
     .progress-container{width:100%;max-width:800px;display:flex;flex-direction:column;gap:8px}
     .progress-bar-container{display:flex;align-items:center;width:100%;gap:15px}
     .candidate-image{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--light-bg);flex-shrink:0}
-    .progress-bar-wrapper {
-  position: relative;
-  width: 100%;
-  height: 24px;
-  background: var(--light-bg);
-  border-radius: 12px;
-  overflow: hidden;
-}
 
-/* Bars are absolutely positioned so they can meet in the middle */
-.progress-bar {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  color: white;
-  font-weight: bold;
-  font-size: 12px;
-  white-space: nowrap;
-}
+    /* Progress bar shell */
+    .progress-bar-wrapper{
+      position:relative;width:100%;height:24px;background:var(--light-bg);
+      border-radius:12px;overflow:hidden;
+    }
+    /* Bars are absolutely positioned so they can meet in the middle */
+    .progress-bar{
+      position:absolute;top:0;height:100%;
+    }
+    .progress-bar.gop{left:0;background-color:var(--gop-color);}
+    .progress-bar.dem{right:0;background-color:var(--dem-color);}
 
-.progress-bar.gop { 
-  left: 0; 
-  background-color: var(--gop-color);
-  justify-content: flex-end;
-  padding-right: 10px;
-}
-
-.progress-bar.dem { 
-  right: 0; 
-  background-color: var(--dem-color);
-  justify-content: flex-start;
-  padding-left: 10px;
-}
+    /* 270 marker */
     .threshold-marker{position:absolute;left:calc(270 / 538 * 100%);width:3px;height:100%;background:rgba(255,255,255,.7);z-index:10;box-shadow:0 0 5px rgba(0,0,0,.5)}
     .threshold-label{position:absolute;top:-18px;left:calc(270 / 538 * 100%);transform:translateX(-50%);color:var(--text-medium);font-size:10px;font-weight:bold;z-index:11}
+
+    /* Edge labels (EV counts) */
+    .bar-label{
+      position:absolute;top:50%;transform:translateY(-50%);
+      font-weight:800;font-size:12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);
+      pointer-events:none;z-index:20;
+    }
+    .bar-label.gop{ text-align:right; }
+    .bar-label.dem{ text-align:left; }
+
     .candidate-labels{display:flex;justify-content:space-between;font-size:14px;font-weight:bold;width:100%;max-width:800px}
     .candidate-labels .Warner{color:var(--gop-color)} .candidate-labels .Taylor{color:var(--dem-color)}
     .candidate-stats{display:flex;justify-content:space-between;width:100%;max-width:800px;font-size:12px;color:var(--text-medium);padding:0 10px}
+
     .mapboxgl-popup-content{padding:0;font-family:'Inter',sans-family;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.2);width:250px;background:var(--dark-bg);color:var(--text-light)}
     .mapboxgl-popup-close-button{color:var(--text-light);font-size:20px;padding:5px}
     .popup-header{background-color:var(--light-bg);padding:10px 15px;border-top-left-radius:8px;border-top-right-radius:8px}
@@ -79,6 +69,7 @@
     .candidate-row .info b{font-size:14px}
     .candidate-row.gop .info b{color:var(--gop-color)} .candidate-row.dem .info b{color:var(--dem-color)} .candidate-row.ind .info b{color:var(--ind-color)}
     .candidate-row .percentage{font-size:16px;font-weight:bold;color:var(--text-light)}
+
     .triangle-container{text-align:center;padding:15px;background:var(--light-bg);border-bottom-left-radius:8px;border-bottom-right-radius:8px;position:relative}
     .triangle-container h4{margin:0 0 10px 0;font-size:14px;color:var(--text-medium);text-transform:uppercase}
     .triangle-chart{width:100px;height:86.6px;position:relative;margin:0 auto;clip-path:polygon(50% 0%,0% 100%,100% 100%);background:linear-gradient(to right,var(--gop-color),var(--dem-color))}
@@ -86,7 +77,9 @@
     .triangle-labels-bottom{display:flex;justify-content:space-between;position:absolute;width:100%;bottom:-5px;left:0;font-size:12px;font-weight:bold;color:var(--text-medium);padding:0 10px}
     .triangle-labels-bottom .dem{color:var(--dem-color)} .triangle-labels-bottom .gop{color:var(--gop-color)}
     .triangle-labels-top{position:absolute;top:2px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:bold;color:var(--ind-color);text-align:center}
+
     .mapboxgl-canvas{cursor:pointer} .mapboxgl-popup{pointer-events:none} .mapboxgl-popup-content{pointer-events:auto}
+
     #aprp-news{position:absolute;bottom:0;left:0;right:0;background:#111827;padding:10px 0;font-size:14px;z-index:1000;display:flex;align-items:center;height:25px;overflow:hidden;white-space:nowrap}
     #aprp-news strong{background-color:var(--gop-color);padding:5px 10px;font-size:14px;margin:0 15px;border-radius:4px;flex-shrink:0}
     .ticker-wrap{flex-grow:1;overflow:hidden}
@@ -94,6 +87,7 @@
     @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
     .state-item{display:inline-block;margin-right:30px}
     .hidden{display:none}
+
     @media (max-width:600px){
       #header{padding:10px;gap:8px}.title{font-size:20px}.candidate-image{width:40px;height:40px}
       #map{top:135px}.candidate-labels,.candidate-stats{font-size:11px}
@@ -113,12 +107,12 @@
         <span class="Taylor">Taylor: <span id="Taylor-votes">0</span></span>
       </div>
       <div class="progress-bar-container">
-        <img src="images/austinwarner.png" alt="Warner" class="candidate-image">
+        <img src="images/austinwarner.png" alt="Warner" class="candidate-image" />
         <div style="width:100%;position:relative;">
           <div class="threshold-label">270</div>
           <div class="progress-bar-wrapper"></div>
         </div>
-        <img src="images/jackietaylor.jpg" alt="Taylor" class="candidate-image">
+        <img src="images/jackietaylor.jpg" alt="Taylor" class="candidate-image" />
       </div>
       <div class="candidate-stats">
         <div id="Warner-pv">Warner: 0 (0%)</div>
@@ -156,7 +150,6 @@
     const CANDIDATE_DEM = 'Jackie Taylor';
     const ELECTORAL_VOTES_TO_WIN = 270;
     const TOTAL_ELECTORAL_VOTES = 538;
-    // NOTE: removed TOTAL_REGISTERED_VOTERS (not suitable for % reporting)
     const DATA_URL = 'https://script.google.com/macros/s/AKfycbxlRKkvfnPR64htpWO537PlcF_cUj6v6lAu6w8zsJGOcn0XfVf6jLsY1lc6D07rNTN5cA/exec';
 
     // --- DOM Elements ---
@@ -205,12 +198,9 @@
 
     function processAndRenderData(data) {
       let nationalTotals = {
-        ev_gop: 0,
-        ev_dem: 0,
-        pv_gop: 0,
-        pv_dem: 0,
-        pv_total: 0,
-        expected_total: 0 // NEW: inferred expected ballots
+        ev_gop: 0, ev_dem: 0,
+        pv_gop: 0, pv_dem: 0, pv_total: 0,
+        expected_total: 0 // inferred expected ballots (Option A)
       };
 
       data.features.forEach(f => {
@@ -222,7 +212,7 @@
         const ind = +p.votes_ind || 0;
         const totalStateVotes = gop + dem + ind;
 
-        // Update state status
+        // Status
         p.status = determineStatus(gop, dem, totalStateVotes, +p.reporting || 0);
 
         // PV totals
@@ -230,12 +220,12 @@
         nationalTotals.pv_dem += dem;
         nationalTotals.pv_total += totalStateVotes;
 
-        // Inferred expected ballots from % reporting (Option A)
+        // Expected ballots from % reporting
         const r = +p.reporting || 0;
         const expectedState = r > 0 ? (totalStateVotes / (r / 100)) : totalStateVotes;
         nationalTotals.expected_total += expectedState;
 
-        // EVs only for fully reported states (your rule)
+        // EVs only for fully reported states
         if (r === 100) {
           if (gop > dem) nationalTotals.ev_gop += +p.electoral_votes;
           else if (dem > gop) nationalTotals.ev_dem += +p.electoral_votes;
@@ -263,55 +253,72 @@
     }
 
     // --- UI Update Functions ---
-function updateHeaderUI({ ev_gop, ev_dem, pv_gop, pv_dem, pv_total, expected_total }) {
-  // Popular vote shares
-  const perc_gop = pv_total ? ((pv_gop / pv_total) * 100).toFixed(1) : '0.0';
-  const perc_dem = pv_total ? ((pv_dem / pv_total) * 100).toFixed(1) : '0.0';
+    function updateHeaderUI({ ev_gop, ev_dem, pv_gop, pv_dem, pv_total, expected_total }) {
+      // Popular vote shares
+      const perc_gop = pv_total ? ((pv_gop / pv_total) * 100).toFixed(1) : '0.0';
+      const perc_dem = pv_total ? ((pv_dem / pv_total) * 100).toFixed(1) : '0.0';
 
-  // National weighted reporting (Option A), capped at 100
-  const denom = Math.max(expected_total || 0, pv_total || 0);
-  const reporting_pct = denom ? Math.min(100, (pv_total / denom) * 100).toFixed(1) : '0.0';
+      // National weighted reporting (Option A), capped at 100
+      const denom = Math.max(expected_total || 0, pv_total || 0);
+      const reporting_pct = denom ? Math.min(100, (pv_total / denom) * 100).toFixed(1) : '0.0';
 
-  // EV bar widths
-  const gopEvPerc = (ev_gop / TOTAL_ELECTORAL_VOTES) * 100;
-  const demEvPerc = (ev_dem / TOTAL_ELECTORAL_VOTES) * 100;
+      // EV bar widths
+      const gopEvPerc = (ev_gop / TOTAL_ELECTORAL_VOTES) * 100;
+      const demEvPercRaw = (ev_dem / TOTAL_ELECTORAL_VOTES) * 100;
+      const demEvPerc = (ev_gop + ev_dem === TOTAL_ELECTORAL_VOTES) ? (100 - gopEvPerc) : demEvPercRaw;
 
-  // Clear and rebuild bars
-  evBarWrapper.innerHTML = '';
+      // Clear and rebuild bars
+      evBarWrapper.innerHTML = '';
 
-  // GOP bar (left → right)
-  const gopBar = document.createElement('div');
-  gopBar.classList.add('progress-bar', 'gop');
-  gopBar.style.width = `${gopEvPerc.toFixed(4)}%`;
-  gopBar.textContent = ev_gop > 0 ? ev_gop : '';
+      // Bars (no text inside)
+      const gopBar = document.createElement('div');
+      gopBar.classList.add('progress-bar','gop');
+      gopBar.style.width = `${gopEvPerc.toFixed(4)}%`;
 
-  // DEM bar (right → left)
-  const demBar = document.createElement('div');
-  demBar.classList.add('progress-bar', 'dem');
+      const demBar = document.createElement('div');
+      demBar.classList.add('progress-bar','dem');
+      demBar.style.width = `${demEvPerc.toFixed(4)}%`;
 
-  // When all 538 EV are called, force perfect meeting (no rounding gap)
-  if (ev_gop + ev_dem === TOTAL_ELECTORAL_VOTES) {
-    demBar.style.width = `${(100 - gopEvPerc).toFixed(4)}%`;
-  } else {
-    demBar.style.width = `${demEvPerc.toFixed(4)}%`;
-  }
-  demBar.textContent = ev_dem > 0 ? ev_dem : '';
+      const thresholdMarker = document.createElement('div');
+      thresholdMarker.classList.add('threshold-marker');
 
-  // Threshold marker
-  const thresholdMarker = document.createElement('div');
-  thresholdMarker.classList.add('threshold-marker');
+      evBarWrapper.appendChild(gopBar);
+      evBarWrapper.appendChild(demBar);
+      evBarWrapper.appendChild(thresholdMarker);
 
-  evBarWrapper.appendChild(gopBar);
-  evBarWrapper.appendChild(demBar);
-  evBarWrapper.appendChild(thresholdMarker);
+      // Edge labels to avoid overlap
+      const gopLabel = document.createElement('div');
+      gopLabel.className = 'bar-label gop';
+      gopLabel.textContent = ev_gop.toString();
 
-  // Header text
-  WarnerVotesEl.textContent = ev_gop;
-  TaylorVotesEl.textContent = ev_dem;
-  WarnerPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
-  TaylorPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
-  reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
-}
+      const demLabel = document.createElement('div');
+      demLabel.className = 'bar-label dem';
+      demLabel.textContent = ev_dem.toString();
+
+      const redEndPct = gopEvPerc;                 // end of red
+      const blueStartPct = 100 - demEvPerc;        // start of blue
+      const gapPct = blueStartPct - redEndPct;     // >=0 when touching/meeting
+
+      let redOffset = 8, blueOffset = 8;           // px inside the bars
+      if (gapPct < 1) { redOffset = 12; blueOffset = 12; }   // nudge more if tight
+      if (gapPct < 0.1) { redOffset = 16; blueOffset = 16; } // ultra-tight
+
+      gopLabel.style.left = `calc(${redEndPct.toFixed(4)}% - ${redOffset}px)`;
+      gopLabel.style.transform = 'translate(-100%, -50%)';
+
+      demLabel.style.left = `calc(${blueStartPct.toFixed(4)}% + ${blueOffset}px)`;
+      demLabel.style.transform = 'translate(0, -50%)';
+
+      evBarWrapper.appendChild(gopLabel);
+      evBarWrapper.appendChild(demLabel);
+
+      // Header text
+      WarnerVotesEl.textContent = ev_gop;
+      TaylorVotesEl.textContent = ev_dem;
+      WarnerPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
+      TaylorPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
+      reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
+    }
 
     function updateKeyRacesTicker(data) {
       const closestStates = data.features
