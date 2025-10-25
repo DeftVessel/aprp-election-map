@@ -321,30 +321,42 @@
     }
 
     function updateKeyRacesTicker(data) {
-      const closestStates = data.features
-        .filter(f => ((+f.properties.votes_gop || 0) + (+f.properties.votes_dem || 0)) > 0)
-        .map(f => {
-          const p = f.properties;
-          const gop_votes = +p.votes_gop || 0;
-          const dem_votes = +p.votes_dem || 0;
-          const total_votes = gop_votes + dem_votes + (+p.votes_ind || 0);
-          const pv_diff = Math.abs(gop_votes - dem_votes);
-          const percent_diff = total_votes > 0 ? ((pv_diff / total_votes) * 100).toFixed(2) : 0;
-          const leader = gop_votes > dem_votes ? CANDIDATE_GOP.split(' ')[1] : CANDIDATE_DEM.split(' ')[1];
-          const party = gop_votes > dem_votes ? 'GOP' : 'DEM';
-          return { name: p.NAME, leader, party, pv_diff, percent_diff };
-        })
-        .sort((a, b) => a.pv_diff - b.pv_diff)
-        .slice(0, 10);
+  const closestStates = data.features
+    .filter(f => ((+f.properties.votes_gop || 0) + (+f.properties.votes_dem || 0) + (+f.properties.votes_ind || 0)) > 0)
+    .map(f => {
+      const p = f.properties;
+      const gop = +p.votes_gop || 0;
+      const dem = +p.votes_dem || 0;
+      const ind = +p.votes_ind || 0;
+      const total = gop + dem + ind;
 
-      const colorMap = { GOP: 'var(--gop-color)', DEM: 'var(--dem-color)' };
-      const closestHTML = closestStates.map(s => `
-        <span class="state-item">
-          <span style="color:${colorMap[s.party]};font-weight:bold;">${s.name}:</span>
-          ${s.leader} leads by ${s.percent_diff}% (${s.pv_diff.toLocaleString()} votes)
-        </span>`).join('');
-      closestStatesEl.innerHTML = closestHTML + closestHTML;
-    }
+      const diffVotes = Math.abs(gop - dem);
+      const diffPct = total > 0 ? (diffVotes / total) * 100 : 0; // number (not string)
+
+      return {
+        name: p.NAME,
+        leader: gop > dem ? CANDIDATE_GOP.split(' ')[1] : CANDIDATE_DEM.split(' ')[1],
+        party: gop > dem ? 'GOP' : 'DEM',
+        diffVotes,
+        diffPct
+      };
+    })
+    // Sort by percentage margin ascending; tie-break on raw votes
+    .sort((a, b) => (a.diffPct - b.diffPct) || (a.diffVotes - b.diffVotes))
+    .slice(0, 10);
+
+  const colorMap = { GOP: 'var(--gop-color)', DEM: 'var(--dem-color)' };
+
+  const closestHTML = closestStates.map(s => `
+    <span class="state-item">
+      <span style="color:${colorMap[s.party]};font-weight:bold;">${s.name}:</span>
+      ${s.leader} leads by ${s.diffPct.toFixed(2)}% (${s.diffVotes.toLocaleString()} votes)
+    </span>
+  `).join('');
+
+  // Duplicate for smooth infinite scroll
+  closestStatesEl.innerHTML = closestHTML + closestHTML;
+}
 
     function checkWinner({ ev_gop, ev_dem }) {
       let winner = null;
