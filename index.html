@@ -24,10 +24,41 @@
     .progress-container{width:100%;max-width:800px;display:flex;flex-direction:column;gap:8px}
     .progress-bar-container{display:flex;align-items:center;width:100%;gap:15px}
     .candidate-image{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--light-bg);flex-shrink:0}
-    .progress-bar-wrapper{position:relative;width:100%;height:24px;background:var(--light-bg);border-radius:12px;overflow:hidden;display:flex;justify-content:space-between}
-    .progress-bar{height:100%;transition:width .5s ease-in-out;display:flex;align-items:center;color:#fff;font-weight:bold;font-size:12px;white-space:nowrap}
-    .progress-bar.dem{background-color:var(--dem-color);justify-content:flex-start;padding-left:10px}
-    .progress-bar.gop{background-color:var(--gop-color);justify-content:flex-end;padding-right:10px}
+    .progress-bar-wrapper {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  background: var(--light-bg);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Bars are absolutely positioned so they can meet in the middle */
+.progress-bar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.progress-bar.gop { 
+  left: 0; 
+  background-color: var(--gop-color);
+  justify-content: flex-end;
+  padding-right: 10px;
+}
+
+.progress-bar.dem { 
+  right: 0; 
+  background-color: var(--dem-color);
+  justify-content: flex-start;
+  padding-left: 10px;
+}
     .threshold-marker{position:absolute;left:calc(270 / 538 * 100%);width:3px;height:100%;background:rgba(255,255,255,.7);z-index:10;box-shadow:0 0 5px rgba(0,0,0,.5)}
     .threshold-label{position:absolute;top:-18px;left:calc(270 / 538 * 100%);transform:translateX(-50%);color:var(--text-medium);font-size:10px;font-weight:bold;z-index:11}
     .candidate-labels{display:flex;justify-content:space-between;font-size:14px;font-weight:bold;width:100%;max-width:800px}
@@ -232,40 +263,38 @@
     }
 
     // --- UI Update Functions ---
-    function updateHeaderUI({ ev_gop, ev_dem, pv_gop, pv_dem, pv_total, expected_total }) {
-      const perc_gop = pv_total ? ((pv_gop / pv_total) * 100).toFixed(1) : '0.0';
-      const perc_dem = pv_total ? ((pv_dem / pv_total) * 100).toFixed(1) : '0.0';
+   const gopEvPerc = (ev_gop / TOTAL_ELECTORAL_VOTES) * 100;
+const demEvPerc = (ev_dem / TOTAL_ELECTORAL_VOTES) * 100;
 
-      // Guard against rounding noise; cap at 100
-      const denom = Math.max(expected_total || 0, pv_total || 0);
-      const reporting_pct = denom ? Math.min(100, (pv_total / denom) * 100).toFixed(1) : '0.0';
+// Clear existing bars
+evBarWrapper.innerHTML = '';
 
-      const gopEvPerc = (ev_gop / TOTAL_ELECTORAL_VOTES) * 100;
-      const demEvPerc = (ev_dem / TOTAL_ELECTORAL_VOTES) * 100;
+// GOP bar (left -> right)
+const gopBar = document.createElement('div');
+gopBar.classList.add('progress-bar', 'gop');
+gopBar.style.width = `${gopEvPerc.toFixed(4)}%`;
+gopBar.textContent = ev_gop > 0 ? ev_gop : '';
 
-      // Clear existing bars
-      evBarWrapper.innerHTML = '';
+// DEM bar (right -> left)
+const demBar = document.createElement('div');
+demBar.classList.add('progress-bar', 'dem');
 
-      // GOP bar
-      const gopBar = document.createElement('div');
-      gopBar.classList.add('progress-bar', 'gop');
-      gopBar.style.width = `${gopEvPerc}%`;
-      gopBar.style.maxWidth = `calc(270 / 538 * 100%)`;
-      gopBar.textContent = ev_gop > 0 ? ev_gop : '';
+// If all 538 EV are called, force DEM width to be the exact complement
+// to avoid any 0.1% rounding gap where the bars meet.
+if (ev_gop + ev_dem === TOTAL_ELECTORAL_VOTES) {
+  demBar.style.width = `${(100 - gopEvPerc).toFixed(4)}%`;
+} else {
+  demBar.style.width = `${demEvPerc.toFixed(4)}%`;
+}
+demBar.textContent = ev_dem > 0 ? ev_dem : '';
 
-      // DEM bar
-      const demBar = document.createElement('div');
-      demBar.classList.add('progress-bar', 'dem');
-      demBar.style.width = `${demEvPerc}%`;
-      demBar.style.maxWidth = `calc(270 / 538 * 100%)`;
-      demBar.textContent = ev_dem > 0 ? ev_dem : '';
+// Threshold marker on top
+const thresholdMarker = document.createElement('div');
+thresholdMarker.classList.add('threshold-marker');
 
-      const thresholdMarker = document.createElement('div');
-      thresholdMarker.classList.add('threshold-marker');
-
-      evBarWrapper.appendChild(gopBar);
-      evBarWrapper.appendChild(demBar);
-      evBarWrapper.appendChild(thresholdMarker);
+evBarWrapper.appendChild(gopBar);
+evBarWrapper.appendChild(demBar);
+evBarWrapper.appendChild(thresholdMarker);
 
       WarnerVotesEl.textContent = ev_gop;
       TaylorVotesEl.textContent = ev_dem;
