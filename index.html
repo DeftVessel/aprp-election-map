@@ -263,45 +263,55 @@
     }
 
     // --- UI Update Functions ---
-   const gopEvPerc = (ev_gop / TOTAL_ELECTORAL_VOTES) * 100;
-const demEvPerc = (ev_dem / TOTAL_ELECTORAL_VOTES) * 100;
+function updateHeaderUI({ ev_gop, ev_dem, pv_gop, pv_dem, pv_total, expected_total }) {
+  // Popular vote shares
+  const perc_gop = pv_total ? ((pv_gop / pv_total) * 100).toFixed(1) : '0.0';
+  const perc_dem = pv_total ? ((pv_dem / pv_total) * 100).toFixed(1) : '0.0';
 
-// Clear existing bars
-evBarWrapper.innerHTML = '';
+  // National weighted reporting (Option A), capped at 100
+  const denom = Math.max(expected_total || 0, pv_total || 0);
+  const reporting_pct = denom ? Math.min(100, (pv_total / denom) * 100).toFixed(1) : '0.0';
 
-// GOP bar (left -> right)
-const gopBar = document.createElement('div');
-gopBar.classList.add('progress-bar', 'gop');
-gopBar.style.width = `${gopEvPerc.toFixed(4)}%`;
-gopBar.textContent = ev_gop > 0 ? ev_gop : '';
+  // EV bar widths
+  const gopEvPerc = (ev_gop / TOTAL_ELECTORAL_VOTES) * 100;
+  const demEvPerc = (ev_dem / TOTAL_ELECTORAL_VOTES) * 100;
 
-// DEM bar (right -> left)
-const demBar = document.createElement('div');
-demBar.classList.add('progress-bar', 'dem');
+  // Clear and rebuild bars
+  evBarWrapper.innerHTML = '';
 
-// If all 538 EV are called, force DEM width to be the exact complement
-// to avoid any 0.1% rounding gap where the bars meet.
-if (ev_gop + ev_dem === TOTAL_ELECTORAL_VOTES) {
-  demBar.style.width = `${(100 - gopEvPerc).toFixed(4)}%`;
-} else {
-  demBar.style.width = `${demEvPerc.toFixed(4)}%`;
+  // GOP bar (left → right)
+  const gopBar = document.createElement('div');
+  gopBar.classList.add('progress-bar', 'gop');
+  gopBar.style.width = `${gopEvPerc.toFixed(4)}%`;
+  gopBar.textContent = ev_gop > 0 ? ev_gop : '';
+
+  // DEM bar (right → left)
+  const demBar = document.createElement('div');
+  demBar.classList.add('progress-bar', 'dem');
+
+  // When all 538 EV are called, force perfect meeting (no rounding gap)
+  if (ev_gop + ev_dem === TOTAL_ELECTORAL_VOTES) {
+    demBar.style.width = `${(100 - gopEvPerc).toFixed(4)}%`;
+  } else {
+    demBar.style.width = `${demEvPerc.toFixed(4)}%`;
+  }
+  demBar.textContent = ev_dem > 0 ? ev_dem : '';
+
+  // Threshold marker
+  const thresholdMarker = document.createElement('div');
+  thresholdMarker.classList.add('threshold-marker');
+
+  evBarWrapper.appendChild(gopBar);
+  evBarWrapper.appendChild(demBar);
+  evBarWrapper.appendChild(thresholdMarker);
+
+  // Header text
+  WarnerVotesEl.textContent = ev_gop;
+  TaylorVotesEl.textContent = ev_dem;
+  WarnerPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
+  TaylorPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
+  reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
 }
-demBar.textContent = ev_dem > 0 ? ev_dem : '';
-
-// Threshold marker on top
-const thresholdMarker = document.createElement('div');
-thresholdMarker.classList.add('threshold-marker');
-
-evBarWrapper.appendChild(gopBar);
-evBarWrapper.appendChild(demBar);
-evBarWrapper.appendChild(thresholdMarker);
-
-      WarnerVotesEl.textContent = ev_gop;
-      TaylorVotesEl.textContent = ev_dem;
-      WarnerPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
-      TaylorPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
-      reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
-    }
 
     function updateKeyRacesTicker(data) {
       const closestStates = data.features
