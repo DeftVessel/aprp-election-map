@@ -104,7 +104,7 @@
       <div class="candidate-labels">
         <span class="Warner">Warner: <span id="Warner-votes">0</span></span>
         <span>270 TO WIN</span>
-        <span class="Taylor">Taylor: <span id="Taylor-votes">0</span></span>
+        <span class="Obama">Obama: <span id="Obama-votes">0</span></span>
       </div>
       <div class="progress-bar-container">
         <img src="images/austinwarner.png" alt="Warner" class="candidate-image" />
@@ -112,12 +112,12 @@
           <div class="threshold-label">270</div>
           <div class="progress-bar-wrapper"></div>
         </div>
-        <img src="images/jackietaylor.jpg" alt="Taylor" class="candidate-image" />
+        <img src="images/jackietaylor.jpg" alt="Obama" class="candidate-image" />
       </div>
       <div class="candidate-stats">
         <div id="Warner-pv">Warner: 0 (0%)</div>
         <div id="reporting">Est. Reporting: 0%</div>
-        <div id="Taylor-pv">Taylor: 0 (0%)</div>
+        <div id="Obama-pv">Obama: 0 (0%)</div>
       </div>
     </div>
   </div>
@@ -157,10 +157,10 @@
     const winnerBanner = document.getElementById('winner-banner');
     const mapContainer = document.getElementById('map');
     const WarnerVotesEl = document.getElementById('Warner-votes');
-    const TaylorVotesEl = document.getElementById('Taylor-votes');
+    const ObamaVotesEl = document.getElementById('Obama-votes');
     const evBarWrapper = document.querySelector('.progress-bar-wrapper');
     const WarnerPvEl = document.getElementById('Warner-pv');
-    const TaylorPvEl = document.getElementById('Taylor-pv');
+    const ObamaPvEl = document.getElementById('Obama-pv');
     const reportingEl = document.getElementById('reporting');
     const closestStatesEl = document.getElementById('closest-states');
 
@@ -314,9 +314,9 @@
 
       // Header text
       WarnerVotesEl.textContent = ev_gop;
-      TaylorVotesEl.textContent = ev_dem;
+      ObamaVotesEl.textContent = ev_dem;
       WarnerPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
-      TaylorPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
+      ObamaPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
       reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
     }
 
@@ -458,7 +458,7 @@
             <div class="triangle-dot" style="left:${dotX}px;bottom:${dotY}px;transform:translate(-50%,0);"></div>
           </div>
           <div class="triangle-labels-bottom">
-            <span class="gop">Warner</span><span class="dem">Taylor</span>
+            <span class="gop">Warner</span><span class="dem">Obama</span>
           </div>
         </div>`;
     }
