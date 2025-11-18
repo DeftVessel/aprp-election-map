@@ -426,7 +426,7 @@
 
       const gopPhoto = 'images/austinwarner.png';
       const demPhoto = 'images/Barack-Obama.webp';
-      const indPhoto = 'images/richardjohnson.png';
+      const indPhoto = 'images/Independent.png';
 
       return `
         <div class="popup-header">
@@ -447,13 +447,13 @@
           ${ind > 0 ? `
           <div class="candidate-row ind">
             <img src="${indPhoto}" />
-            <div class="info"><b>Richard Johnson</b><small>${ind.toLocaleString()} votes</small></div>
+            <div class="info"><b>Other</b><small>${ind.toLocaleString()} votes</small></div>
             <div class="percentage">${indPerc.toFixed(1)}%</div>
           </div>` : ''}
         </div>
         <div class="triangle-container">
           <h4>${leanText}</h4>
-          <div class="triangle-labels-top">Johnson</div>
+          <div class="triangle-labels-top">Other</div>
           <div class="triangle-chart">
             <div class="triangle-dot" style="left:${dotX}px;bottom:${dotY}px;transform:translate(-50%,0);"></div>
           </div>
