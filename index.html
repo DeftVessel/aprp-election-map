@@ -51,7 +51,7 @@
     .bar-label.dem{ text-align:left; }
 
     .candidate-labels{display:flex;justify-content:space-between;font-size:14px;font-weight:bold;width:100%;max-width:800px}
-    .candidate-labels .Warner{color:var(--gop-color)} .candidate-labels .Taylor{color:var(--dem-color)}
+    .candidate-labels .Warner{color:var(--gop-color)} .candidate-labels .Obama{color:var(--dem-color)}
     .candidate-stats{display:flex;justify-content:space-between;width:100%;max-width:800px;font-size:12px;color:var(--text-medium);padding:0 10px}
 
     .mapboxgl-popup-content{padding:0;font-family:'Inter',sans-family;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.2);width:250px;background:var(--dark-bg);color:var(--text-light)}
@@ -112,7 +112,7 @@
           <div class="threshold-label">270</div>
           <div class="progress-bar-wrapper"></div>
         </div>
-        <img src="images/jackietaylor.jpg" alt="Obama" class="candidate-image" />
+        <img src="images/Barack-Obama.webp" alt="Obama" class="candidate-image" />
       </div>
       <div class="candidate-stats">
         <div id="Warner-pv">Warner: 0 (0%)</div>
@@ -147,7 +147,7 @@
   <script>
     // --- Constants ---
     const CANDIDATE_GOP = 'Austin Warner';
-    const CANDIDATE_DEM = 'Jackie Taylor';
+    const CANDIDATE_DEM = 'Barack Obama';
     const ELECTORAL_VOTES_TO_WIN = 270;
     const TOTAL_ELECTORAL_VOTES = 538;
     const DATA_URL = 'https://script.google.com/macros/s/AKfycbxlRKkvfnPR64htpWO537PlcF_cUj6v6lAu6w8zsJGOcn0XfVf6jLsY1lc6D07rNTN5cA/exec';
@@ -425,7 +425,7 @@
       }
 
       const gopPhoto = 'images/austinwarner.png';
-      const demPhoto = 'images/jackietaylor.jpg';
+      const demPhoto = 'images/Barack-Obama.webp';
       const indPhoto = 'images/richardjohnson.png';
 
       return `
