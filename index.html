@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>2016 Live Election Map</title>
+  <title>2000 Live Election Map</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
@@ -51,7 +51,7 @@
     .bar-label.dem{ text-align:left; }
 
     .candidate-labels{display:flex;justify-content:space-between;font-size:14px;font-weight:bold;width:100%;max-width:800px}
-    .candidate-labels .Hagel{color:var(--gop-color)} .candidate-labels .Grassley{color:var(--dem-color)}
+    .candidate-labels .Sterling{color:var(--gop-color)} .candidate-labels .Gore{color:var(--dem-color)}
     .candidate-stats{display:flex;justify-content:space-between;width:100%;max-width:800px;font-size:12px;color:var(--text-medium);padding:0 10px}
 
     .mapboxgl-popup-content{padding:0;font-family:'Inter',sans-family;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.2);width:250px;background:var(--dark-bg);color:var(--text-light)}
@@ -99,25 +99,25 @@
   <div id="winner-banner"></div>
 
   <div id="header">
-    <div class="title">2016 Presidential Election</div>
+    <div class="title">2000 Presidential Election</div>
     <div class="progress-container">
       <div class="candidate-labels">
-        <span class="Hagel">Hagel: <span id="Hagel-votes">0</span></span>
+        <span class="Sterling">Sterling: <span id="Sterling-votes">0</span></span>
         <span>270 TO WIN</span>
-        <span class="Grassley">Grassley: <span id="Grassley-votes">0</span></span>
+        <span class="Gore">Gore: <span id="Gore-votes">0</span></span>
       </div>
       <div class="progress-bar-container">
-        <img src="images/charleshagel.jpg" alt="Hagel" class="candidate-image" />
+        <img src="images/jksterling.jpg" alt="Sterling" class="candidate-image" />
         <div style="width:100%;position:relative;">
           <div class="threshold-label">270</div>
           <div class="progress-bar-wrapper"></div>
         </div>
-        <img src="images/markgrassley.jpeg" alt="Grassley" class="candidate-image" />
+        <img src="images/algore.jpg" alt="Gore" class="candidate-image" />
       </div>
       <div class="candidate-stats">
-        <div id="Hagel-pv">Hagel: 0 (0%)</div>
+        <div id="Sterling-pv">Sterling: 0 (0%)</div>
         <div id="reporting">Est. Reporting: 0%</div>
-        <div id="Grassley-pv">Grassley: 0 (0%)</div>
+        <div id="Gore-pv">Gore: 0 (0%)</div>
       </div>
     </div>
   </div>
@@ -146,8 +146,8 @@
 
   <script>
     // --- Constants ---
-    const CANDIDATE_GOP = 'Charles Hagel';
-    const CANDIDATE_DEM = 'Mark Grassley';
+    const CANDIDATE_GOP = 'James Sterling';
+    const CANDIDATE_DEM = 'Al Gore';
     const ELECTORAL_VOTES_TO_WIN = 270;
     const TOTAL_ELECTORAL_VOTES = 538;
     const DATA_URL = 'https://script.google.com/macros/s/AKfycbxlRKkvfnPR64htpWO537PlcF_cUj6v6lAu6w8zsJGOcn0XfVf6jLsY1lc6D07rNTN5cA/exec';
@@ -156,11 +156,11 @@
     const loader = document.getElementById('loader');
     const winnerBanner = document.getElementById('winner-banner');
     const mapContainer = document.getElementById('map');
-    const HagelVotesEl = document.getElementById('Hagel-votes');
-    const GrassleyVotesEl = document.getElementById('Grassley-votes');
+    const SterlingVotesEl = document.getElementById('Sterling-votes');
+    const GoreVotesEl = document.getElementById('Gore-votes');
     const evBarWrapper = document.querySelector('.progress-bar-wrapper');
-    const HagelPvEl = document.getElementById('Hagel-pv');
-    const GrassleyPvEl = document.getElementById('Grassley-pv');
+    const SterlingPvEl = document.getElementById('Sterling-pv');
+    const GorePvEl = document.getElementById('Gore-pv');
     const reportingEl = document.getElementById('reporting');
     const closestStatesEl = document.getElementById('closest-states');
 
@@ -313,10 +313,10 @@
       evBarWrapper.appendChild(demLabel);
 
       // Header text
-      HagelVotesEl.textContent = ev_gop;
-      GrassleyVotesEl.textContent = ev_dem;
-      HagelPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
-      GrassleyPvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
+      SterlingVotesEl.textContent = ev_gop;
+      GoreVotesEl.textContent = ev_dem;
+      SterlingPvEl.textContent = `${CANDIDATE_GOP.split(' ')[1]}: ${pv_gop.toLocaleString()} (${perc_gop}%)`;
+      GorePvEl.textContent = `${CANDIDATE_DEM.split(' ')[1]}: ${pv_dem.toLocaleString()} (${perc_dem}%)`;
       reportingEl.textContent = `Est. Reporting: ${reporting_pct}%`;
     }
 
@@ -424,8 +424,8 @@
         dotY = indPerc / 100 * chartHeight;
       }
 
-      const gopPhoto = 'images/charleshagel.jpg';
-      const demPhoto = 'images/markgrassley.jpeg';
+      const gopPhoto = 'images/jksterling.jpg';
+      const demPhoto = 'images/algore.jpg';
       const indPhoto = 'images/Independent.png';
 
       return `
@@ -458,7 +458,7 @@
             <div class="triangle-dot" style="left:${dotX}px;bottom:${dotY}px;transform:translate(-50%,0);"></div>
           </div>
           <div class="triangle-labels-bottom">
-            <span class="gop">Hagel</span><span class="dem">Grassley</span>
+            <span class="gop">Sterling</span><span class="dem">Gore</span>
           </div>
         </div>`;
     }
