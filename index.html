@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>2000 Live Election Map</title>
+  <title>2004 Live Election Map</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
@@ -16,7 +16,7 @@
       --dark-bg:#111827; --light-bg:#1f2937; --text-light:#f9fafb; --text-medium:#9ca3af; --winner-bg:#27ae60;
     }
     body{margin:0;padding:0;font-family:'Inter',sans-serif;background-color:var(--dark-bg);color:var(--text-light);overflow:hidden}
-    #loader{position:absolute;inset:0;background:rgba(17,24,39,.9);display:flex;justify-content:center;align-items:center;font-size:1.5em;color:var(--text-light);z-index:2000;transition:opacity .5s ease}
+    #loader{position:absolute;inset:0;background:rgba(17,24,39,.9);display:flex;justify-content:center;align-items:center;font-size:1.5em;color:var(--text-light);z-index:2004;transition:opacity .5s ease}
     #winner-banner{position:absolute;top:-100px;left:0;right:0;background:var(--winner-bg);color:#fff;text-align:center;padding:15px;font-size:1.2em;font-weight:bold;z-index:1500;transition:top .5s cubic-bezier(.68,-.55,.27,1.55);box-shadow:0 4px 10px rgba(0,0,0,.3)}
     #map{position:absolute;top:155px;bottom:45px;width:100%}
     #header{position:absolute;top:0;left:0;right:0;background:var(--dark-bg);padding:15px 20px;z-index:1000;display:flex;flex-direction:column;align-items:center;border-bottom:2px solid var(--light-bg);gap:12px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
@@ -99,7 +99,7 @@
   <div id="winner-banner"></div>
 
   <div id="header">
-    <div class="title">2000 Presidential Election</div>
+    <div class="title">2004 Presidential Election</div>
     <div class="progress-container">
       <div class="candidate-labels">
         <span class="Sterling">Sterling: <span id="Sterling-votes">0</span></span>
